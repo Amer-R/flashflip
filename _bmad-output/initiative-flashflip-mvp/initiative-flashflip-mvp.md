@@ -52,7 +52,7 @@ First-year students revising on their phones can test themselves on their own te
 ## References
 
 - brief — _bmad-output/initiative-flashflip-mvp/brief-flashflip/brief-flashflip.md, sections Solution, Success Criteria, Scope
-- architecture — _bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md (draft; reviewer fixes pending)
+- architecture — _bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md, sections Invariants & Rules (AD-1 to AD-12), Stack
 
 ## Notes
 

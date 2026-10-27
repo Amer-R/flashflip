@@ -9,7 +9,7 @@ after = []
 hitl = true # a person creates the git remote and connects the repo to Vercel
 risk = "medium" # first deploy plus new React 19.3 use(browser()) hydration path
 references = ["_bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md"]
-notes = ["The repo has no git remote yet; Vercel's Git integration needs one."]
+notes = ["Before the first deploy: rename master to main, create the GitHub repo and push, then import it into Vercel with Node 24.x (architecture AD-12)."]
 
 [[entry]]
 id = 2
