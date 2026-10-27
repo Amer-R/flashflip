@@ -1,0 +1,33 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Paste and save cards"
+description = "Tracer bullet: phone-first paste screen with live card and skipped counts, deck saved to and restored from localStorage, Clear deck, Start enabled only with at least one card. Creates the core types, the reducer, the deck store, the Vitest setup with an npm test script, the static page and the first Vercel deploy; hands the saved deck, the reducer and the Start control to story 2."
+verify = "On the production URL, pasting 5 lines with 1 malformed shows 4 cards and 1 skipped; after a reload the deck is still there; pasting new lines replaces it; Clear deck empties it and disables Start; npm test passes."
+covers = ["R1", "R7", "R8", "R9"]
+after = []
+hitl = true # a person creates the git remote and connects the repo to Vercel
+risk = "medium" # first deploy plus new React 19.3 use(browser()) hydration path
+references = ["_bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md"]
+notes = ["The repo has no git remote yet; Vercel's Git integration needs one."]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Flip-card quiz with shuffle"
+description = "Start creates a round in shuffled order; one card per screen with tap targets of at least 44px shows the term, a flip button reveals the definition, and Knew it / Missed it records the result and advances. Hands the completed round's results to story 3."
+verify = "On a 10-card deck, Start, then reload and Start again, gives different orders; each card opens on its term, flips with tap, Enter or Space, and Knew it / Missed it moves to the next card; after the last card the round is complete; npm test passes."
+covers = ["R2", "R3", "R4", "R8"]
+after = [1] # needs the deck, reducer and Start from story 1
+hitl = false
+risk = "medium" # flip interaction and accessibility are the least certain part
+[[entry]]
+id = 3
+type = "story"
+title = "Score and retry missed"
+description = "After the last card the page shows known out of total; Retry missed starts a reshuffled round of only the missed cards, New round restarts the whole deck, Edit deck returns to the paste screen, and results are never saved."
+verify = "Marking 7 of 10 Knew it shows 7 / 10; Retry missed shows only the 3 missed cards; with none missed Retry is not offered; Edit deck opens the paste screen with the deck filled in; after a reload no results remain; npm test passes."
+covers = ["R5", "R6", "R7", "R8", "R9"]
+after = [2] # needs completed rounds from story 2
+hitl = false
+risk = "low" # derived score over an existing round model
