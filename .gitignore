@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# bmad: machine-local render cache and per-user settings
+/_bmad/render/
+/_bmad/custom/*.user.toml
