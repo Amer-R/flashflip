@@ -56,8 +56,9 @@ First-year students revising on their phones can test themselves on their own te
 
 ## Notes
 
-- Assumption: A reload restores the deck only, never a round in progress (architecture AD-8).
 - Source conflict: prd — _bmad-output/initiative-flashflip-mvp/prd-flashflip/ is a draft with no requirements. The brief was used instead; the PRD is not a source until it has content.
 - Decision: 2026-10-28 — Retrying missed cards (R6) stays in the MVP.
 - Decision: 2026-10-28 — Zero valid cards keeps Start disabled. Pasting replaces the deck, and Clear deck removes it (R9).
 - Decision: 2026-10-28 — Sliced into one epic, `epic-study-loop`, with three stories. Shuffle moved from the score story into the quiz story because the architecture shuffles at round start (AD-7).
+- Decision: 2026-10-28 — A reload restores the deck only, never a round in progress (architecture AD-8).
+- Decision: 2026-10-28 — UX design (`bmad-ux`) declined. The builder lays out the screens within the architecture's Styling and Accessibility conventions.
