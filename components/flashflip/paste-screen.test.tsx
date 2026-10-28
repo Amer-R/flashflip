@@ -10,7 +10,7 @@ function setup(deck: Parameters<typeof PasteScreen>[0]['deck'] = null) {
   const onClear = vi.fn()
   render(<PasteScreen deck={deck} onStart={onStart} onClear={onClear} />)
   const textarea = screen.getByLabelText('Your cards') as HTMLTextAreaElement
-  const save = screen.getByRole('button', { name: 'Save deck' }) as HTMLButtonElement
+  const save = screen.getByRole('button', { name: 'Start' }) as HTMLButtonElement
   const clear = screen.getByRole('button', { name: 'Clear deck' }) as HTMLButtonElement
   return { onStart, onClear, textarea, save, clear }
 }
@@ -18,21 +18,21 @@ function setup(deck: Parameters<typeof PasteScreen>[0]['deck'] = null) {
 const fiveLines = 'a - 1\nb - 2\nnope\nc - 3\nd - 4'
 
 describe('PasteScreen', () => {
-  it('starts empty with Save deck disabled when there is no deck', () => {
+  it('starts empty with Start disabled when there is no deck', () => {
     const { textarea, save } = setup()
     expect(textarea.value).toBe('')
     expect(save.disabled).toBe(true)
     expect(screen.getByText('0 cards · 0 skipped')).toBeTruthy()
   })
 
-  it('shows live counts and enables Save deck', () => {
+  it('shows live counts and enables Start', () => {
     const { textarea, save } = setup()
     fireEvent.change(textarea, { target: { value: fiveLines } })
     expect(screen.getByText('4 cards · 1 skipped')).toBeTruthy()
     expect(save.disabled).toBe(false)
   })
 
-  it('keeps Save deck disabled when every line is malformed', () => {
+  it('keeps Start disabled when every line is malformed', () => {
     const { textarea, save } = setup()
     fireEvent.change(textarea, { target: { value: 'a-b\nx - \n - y\nplain' } })
     expect(screen.getByText('0 cards · 4 skipped')).toBeTruthy()

@@ -52,7 +52,7 @@ export function PasteScreen({ deck, onStart, onClear }: PasteScreenProps) {
           onClick={() => onStart(cards, skipped)}
           className="min-h-11 rounded-full bg-zinc-900 px-6 text-base font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-400"
         >
-          Save deck
+          Start
         </button>
         <button
           type="button"
