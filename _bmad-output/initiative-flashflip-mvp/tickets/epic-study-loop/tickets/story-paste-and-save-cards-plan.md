@@ -3,15 +3,15 @@ title: 'Paste and save cards'
 type: 'feature'
 ticket: '1'
 created: '2026-10-28'
-status: 'ready-for-dev'
-baseline_revision: ''
+status: 'built'
+baseline_revision: '7e354e4a7af044e3582ee13dd3894e273404f738'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: ''
-review_source: ''
-lenses_ran: []
-review_loop_iteration: 0
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
+review_loop_iteration: 1
 context: ['{project-root}/_bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md']
 ---
 
@@ -32,6 +32,7 @@ context: ['{project-root}/_bmad-output/initiative-flashflip-mvp/architecture-fla
 - Tap targets are ≥ 44px. Base styles target the phone, and `sm:` and up enhances.
 - **Decision (user, 2026-10-28):** In this story the button is labelled **Save deck**. It dispatches `replaceDeck`, persists the deck, and shows "Saved N cards". It stays disabled with 0 cards. Story 1.2 renames it to Start and adds the round.
 - **Decision (user, 2026-10-28):** Keep the full plan (~2,000 tokens) as one story, since the tracer has to cover every layer.
+- **Decision (user, 2026-10-28, amends AD-11):** The keyed remount of `PasteScreen` on Save deck / Clear deck stays. Feedback about the last action lives in the always-mounted root, not in the remounted screen: a `role="status"` region the root owns announces "Saved N cards" (plus how many skipped lines were dropped, when any) or "Deck cleared", and is empty on page load. After Save deck or Clear deck, focus returns to the textarea. `onStart` gains the skipped count: `onStart(cards: Card[], skipped: number): void`.
 
 **Never:**
 - No quiz, flip, round, shuffle or score UI or logic. That is stories 1.2 and 1.3.
@@ -72,10 +73,10 @@ context: ['{project-root}/_bmad-output/initiative-flashflip-mvp/architecture-fla
 - [ ] `lib/flashflip/parse.ts` + `parse.test.ts` — `parseDeck` and `formatDeck` per AD-6. Tests cover every I/O row above plus the round-trip property.
 - [ ] `lib/flashflip/reducer.ts` + `reducer.test.ts` — `initialState`, `flashflipReducer`, and an `Action` union containing `replaceDeck`, `clearDeck` and `goToPaste` with the AD-9 transitions. Stories 1.2 and 1.3 add `startRound` and `mark`.
 - [ ] `lib/storage/deck-store.ts` + `deck-store.test.ts` — `loadDeck`, `saveDeck` and `clearDeck` per AD-3. Tests cover the corrupt, unavailable, empty and round-trip cases.
-- [ ] `components/flashflip/flashflip-app.tsx` — `'use client'` root per AD-4 and AD-5: owns the `deckRevision` counter, persists from the payload, and renders `PasteScreen` while `view === 'paste'`.
-- [ ] `components/flashflip/paste-screen.tsx` + `paste-screen.test.tsx` — `PasteScreenProps` per AD-11, with the `onStart` prop wired to the Save deck button. Label the textarea, show live counts ("4 cards · 1 skipped"), and add Save deck and Clear deck buttons plus a "Saved N cards" status. Test the counts, the disabled Save deck, and that Save deck calls `onStart` with the previewed cards.
+- [ ] `components/flashflip/flashflip-app.tsx` + `flashflip-app.test.tsx` — `'use client'` root per AD-4 and AD-5: owns the `deckRevision` counter and a `notice` string (initially `''`), persists from the payload, and renders `PasteScreen` while `view === 'paste'`. See Design Notes for the always-mounted status region and focus return. Test through the real root and store: save → reload restores deck; replace; clear; the status text after Save (with and without skipped lines) and after Clear; the status is empty on a fresh mount with a saved deck; focus is on the textarea after Save and after Clear.
+- [ ] `components/flashflip/paste-screen.tsx` + `paste-screen.test.tsx` — `PasteScreenProps` per AD-11 as amended (`onStart(cards, skipped)`), wired to the Save deck button. Label the textarea, show live counts ("4 cards · 1 skipped"), and add Save deck and Clear deck buttons. The screen renders no save/clear status of its own. Test the counts, the disabled Save deck, and that Save deck calls `onStart` with exactly the previewed cards and skipped count.
 - [ ] `app/page.tsx`, `app/layout.tsx` — as in the Code Map.
-- [ ] `eslint.config.mjs` — `no-restricted-imports` for `lib/flashflip/**`, and `no-restricted-globals` for `localStorage` outside `lib/storage/deck-store.ts`.
+- [ ] `eslint.config.mjs` — `no-restricted-imports` for `lib/flashflip/**`; `no-restricted-globals` for `localStorage`, plus `no-restricted-properties` for `window.localStorage` and `globalThis.localStorage`, in every file except `lib/storage/deck-store.ts` and its colocated test `lib/storage/deck-store.test.ts` (which must write raw values to the key).
 - [ ] **HITL (user)** — create an empty GitHub repo and `git push -u origin main`. Import it in Vercel with the Next.js preset and Node.js 24.x, then share the production URL.
 
 **Acceptance Criteria:**
@@ -83,26 +84,42 @@ context: ['{project-root}/_bmad-output/initiative-flashflip-mvp/architecture-fla
 - Given a deck saved with Save deck, when the page is reloaded, then the textarea shows the same deck and the same counts.
 - Given a saved deck, when new lines are pasted and Save deck is pressed, then a reload shows the new deck only.
 - Given a saved deck, when Clear deck is pressed, then the textarea is empty, Save deck is disabled, and a reload shows no deck.
+- Given 5 pasted lines with 1 malformed, when Save deck is pressed, then the status region reads "Saved 4 cards · 1 skipped line removed" and focus is on the textarea; after Clear deck it reads "Deck cleared"; after a reload it is empty.
 - Given the production Vercel URL on a phone-width screen, when the above is repeated, then it behaves the same, with no login prompt.
 
 ## Implementation Notes
 
 ## Plan Change Log
 
+- 2026-10-28, review loop 1 — **Trigger:** Review Triage rows 3, 4 and 6 (intent_gap): feedback inside the keyed `PasteScreen` was lost or misleading on remount — "Saved N cards" not reliably announced, focus dropped to `body`, "Saved" shown on every reload, and the skipped count silently vanished after Save. The user chose to keep the remount and move feedback to the root (decision in the frozen block). Row 2 (window/globalThis bypass) folded into the eslint task. **Amended:** the flashflip-app, paste-screen and eslint tasks, a new acceptance criterion, and Design Notes. **Known-bad state to avoid:** any save/clear status rendered inside `PasteScreen` or derived from `text === formatDeck(deck)`; focus left on `body` after Save/Clear. **KEEP** (attempt 1 was good here, re-derive the same way): `parseDeck`/`formatDeck` with `c<n>` ids and their tests; `loadDeck`'s strict validation (version 1, non-empty array, non-empty string fields, unique ids, copies only `id/term/definition`) and its 11 corrupt-case table plus the throwing-storage test; the reducer and its tests; `use(browser('Deck is stored in localStorage.'))` with the lazy `useReducer` initializer; `page.tsx` header + `<Suspense>` layout; the Tailwind classes, `min-h-11` buttons, `useId` label/hint wiring and the "N cards · M skipped" pluralisation; the AD-1 import restriction block. Attempt-1 diff is kept at `C:/Users/amero/AppData/Local/Temp/claude/C--Users-amero-BMAD-flashflip--bmad-output/fa810a04-409b-4989-9ad9-2c71c61ed018/scratchpad/story11-attempt1.patch` for reference.
+
 ## Review Triage Log
+
+| # | Finding | Verdict | Route | Evidence |
+|---|---------|---------|-------|----------|
+| 1 | `eslint.config.mjs` AD-3 block also exempts `deck-store.test.ts` | low | rejected | Real departure from the Lint convention, but the file is a test that must write raw/corrupt values to the key; no production code can use the exemption. Removing it needs a helper or a `window.localStorage` bypass, which is more than a direct correction. |
+| 2 | `no-restricted-globals` misses `window.localStorage` / `globalThis.localStorage` | low | patch | True: the rule only matches bare identifiers, so a later story could bypass AD-3 silently. A `no-restricted-properties` entry in the same block closes it. |
+| 3 | "Saved N cards" not announced: the `role="status"` region is remounted already filled | medium | intent_gap | True: `handleStart` bumps `deckRevision`, `PasteScreen` remounts (AD-11), and a live region inserted with its content is not reliably announced. Same remount also drops focus from Save deck / Clear deck to `body`, and resets the `aria-live` counts. |
+| 4 | "Saved N cards" also shows after every reload, not only after Save deck | low | intent_gap (grouped with 3) | True: `saved` is derived from `text === formatDeck(deck)` because status kept inside the keyed screen cannot survive the remount. Plan does not say whether this is wanted. |
+| 5 | AC5 (production URL) unmet | false | rejected | The plan assigns the deploy to the HITL task owned by the user; it cannot appear in the diff and is checked after the push. |
+| 6 | Save deck silently rewrites the textarea, so "1 skipped" becomes "0 skipped" | medium | intent_gap (grouped with 3) | True: the keyed remount reseeds from `formatDeck(deck)`, dropping malformed lines with no notice, so the student loses the skipped count R1 asks for right after saving. Mandated by AD-11's remount rule. |
+| 7 | Loop 2: repeating an identical Save deck or Clear deck is not announced | low | patch | True: `setNotice` receives the same string, React skips the update, and the `role="status"` text never changes, so no announcement. Fix: key the notice text node on `deckRevision` inside the still-mounted region. |
 
 ## Design Notes
 
 The root conforms to the screen, never the other way round (AD-11). The `onStart` handler (the Save deck button in this story) is the only place that persists:
 
 ```tsx
-function handleStart(cards: Card[]) {
+function handleStart(cards: Card[], skipped: number) {
   if (cards.length === 0) return
   dispatch({ type: 'replaceDeck', cards })
   deckStore.saveDeck(cards)
+  setNotice(`Saved ${plural(cards.length, 'card')}` + (skipped ? ` · ${plural(skipped, 'skipped line')} removed` : ''))
   setDeckRevision(r => r + 1)
 }
 ```
+
+`handleClear` mirrors it with `setNotice('Deck cleared')`. The root wraps the keyed screen in a `<div ref={pasteRef}>` and renders `<p role="status" className="min-h-5 …">{notice}</p>` beside it, outside the keyed element so the region stays mounted and its text change is announced. A `useEffect` keyed on `deckRevision` (skipping `0`, the initial mount) focuses `pasteRef.current?.querySelector('textarea')`. `plural` is a small local helper; one copy may be shared from the screen.
 
 ## Verification
 
