@@ -43,6 +43,25 @@ function flipAndMark(result: 'Knew it' | 'Missed it') {
   return term
 }
 
+/** The score screen's `known / total` text. */
+function scoreText() {
+  return screen.getByRole('region', { name: 'Score' }).querySelector('h2 > span')?.textContent
+}
+
+/** Mark every remaining card, Knew it when `knew(term, i)` is true; returns the terms shown, by result. */
+function markRound(knew: (term: string, i: number) => boolean) {
+  const knewTerms: string[] = []
+  const missedTerms: string[] = []
+  for (let i = 0; screen.queryByRole('region', { name: 'Quiz' }); i++) {
+    const term = flipControl().textContent ?? ''
+    const k = knew(term, i)
+    flipAndMark(k ? 'Knew it' : 'Missed it')
+    if (k) knewTerms.push(term)
+    else missedTerms.push(term)
+  }
+  return { knewTerms, missedTerms }
+}
+
 describe('FlashFlipApp', () => {
   it('saves a deck that survives a remount (reload)', async () => {
     let ui = await mount()
@@ -130,7 +149,7 @@ describe('FlashFlipApp', () => {
     const first = screen.getByRole('status').firstElementChild
     expect(first?.textContent).toBe('Saved 1 card')
     flipAndMark('Knew it')
-    fireEvent.click(screen.getByRole('button', { name: 'Back to deck' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit deck' }))
     fireEvent.click(ui.save())
     const second = screen.getByRole('status').firstElementChild
     expect(second?.textContent).toBe('Saved 1 card')
@@ -159,7 +178,7 @@ describe('FlashFlipApp', () => {
         seen.push(flipAndMark(i % 2 ? 'Knew it' : 'Missed it'))
       }
       expect([...seen].sort()).toEqual(Array.from({ length: 10 }, (_, i) => `term${i}`).sort())
-      expect(screen.getByRole('heading', { name: 'Round complete' })).toBeTruthy()
+      expect(scoreText()).toBe('5 / 10')
     })
 
     it('builds the round order by shuffling the started cards', async () => {
@@ -195,21 +214,6 @@ describe('FlashFlipApp', () => {
       expect(screen.getByText('Card 2 of 3')).toBeTruthy()
     })
 
-    it('ends with Round complete, Back to deck focused, and returns to the filled paste screen', async () => {
-      const ui = await mount()
-      fireEvent.change(ui.textarea(), { target: { value: 'a - 1\nb - 2' } })
-      fireEvent.click(ui.save())
-      flipAndMark('Knew it')
-      flipAndMark('Missed it')
-      const back = screen.getByRole('button', { name: 'Back to deck' })
-      expect(screen.getByRole('heading', { name: 'Round complete' })).toBeTruthy()
-      expect(document.activeElement).toBe(back)
-      fireEvent.click(back)
-      expect(ui.textarea().value).toBe('a - 1\nb - 2')
-      expect(document.activeElement).toBe(ui.textarea())
-      expect(screen.getByText('2 cards · 0 skipped')).toBeTruthy()
-    })
-
     it('shows the paste screen with the saved deck after a reload mid-round', async () => {
       let ui = await mount()
       fireEvent.change(ui.textarea(), { target: { value: 'a - 1\nb - 2\nc - 3' } })
@@ -237,12 +241,143 @@ describe('FlashFlipApp', () => {
 
       flipAndMark('Knew it')
       flipAndMark('Missed it')
-      fireEvent.click(screen.getByRole('button', { name: 'Back to deck' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Edit deck' }))
       expect(save).toHaveBeenCalledTimes(1)
       expect(clear).not.toHaveBeenCalled()
       expect(setItem).toHaveBeenCalledTimes(1)
       expect(removeItem).not.toHaveBeenCalled()
       expect(deckStore.loadDeck()).toEqual(parseDeck('a - 1\nb - 2').cards)
+    })
+  })
+
+  describe('score screen', () => {
+    async function startTen() {
+      const ui = await mount()
+      fireEvent.change(ui.textarea(), { target: { value: tenLines } })
+      fireEvent.click(ui.save())
+      return ui
+    }
+
+    it('shows 7 / 10 after marking 7 of 10 Knew it, with focus on the score heading', async () => {
+      await startTen()
+      markRound((_, i) => i < 7)
+      expect(scoreText()).toBe('7 / 10')
+      expect(screen.getByText('cards known')).toBeTruthy()
+      expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2 }))
+      expect(screen.getByRole('button', { name: 'Retry missed' })).toBeTruthy()
+    })
+
+    it('Retry missed gives a round of only the missed cards, scored out of 3, until none are missed', async () => {
+      await startTen()
+      const { missedTerms } = markRound((_, i) => i < 7)
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      expect(screen.getByText('Card 1 of 3')).toBeTruthy()
+
+      const missedOnce = missedTerms[0]
+      const retry = markRound((term) => term !== missedOnce)
+      expect([...retry.knewTerms, ...retry.missedTerms].sort()).toEqual([...missedTerms].sort())
+      expect(scoreText()).toBe('2 / 3')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      expect(screen.getByText('Card 1 of 1')).toBeTruthy()
+      expect(flipControl().textContent).toBe(missedOnce)
+      markRound(() => true)
+      expect(scoreText()).toBe('1 / 1')
+      expect(screen.queryByRole('button', { name: 'Retry missed' })).toBeNull()
+    })
+
+    it('reshuffles the missed ids for a retry', async () => {
+      // Math.random -> 0 rotates left: [c0, c1, c2, c3] -> [c1, c2, c3, c0] (see shuffle.test.ts).
+      vi.spyOn(Math, 'random').mockReturnValue(0)
+      const ui = await mount()
+      fireEvent.change(ui.textarea(), { target: { value: 'a - 1\nb - 2\nc - 3\nd - 4' } })
+      fireEvent.click(ui.save())
+      // Shown b, c, d, a; miss all but c.
+      markRound((term) => term === 'c')
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      // Missed ids in order order are [c1, c3, c0], shuffled to [c3, c0, c1].
+      expect(markRound(() => true).knewTerms).toEqual(['d', 'a', 'b'])
+    })
+
+    it('offers no Retry missed after 10 / 10', async () => {
+      await startTen()
+      markRound(() => true)
+      expect(scoreText()).toBe('10 / 10')
+      expect(screen.queryByRole('button', { name: 'Retry missed' })).toBeNull()
+      expect(screen.getByRole('button', { name: 'New round' })).toBeTruthy()
+    })
+
+    it('offers Retry missed with all 10 after 0 / 10', async () => {
+      await startTen()
+      markRound(() => false)
+      expect(scoreText()).toBe('0 / 10')
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      expect(screen.getByText('Card 1 of 10')).toBeTruthy()
+    })
+
+    it('New round gives every deck card, reshuffled, scored out of 10', async () => {
+      await startTen()
+      markRound((_, i) => i < 7)
+      fireEvent.click(screen.getByRole('button', { name: 'New round' }))
+      expect(screen.getByText('Card 1 of 10')).toBeTruthy()
+      const { knewTerms } = markRound(() => true)
+      expect(knewTerms.sort()).toEqual(Array.from({ length: 10 }, (_, i) => `term${i}`).sort())
+      expect(scoreText()).toBe('10 / 10')
+    })
+
+    it('New round after a retry is still the whole deck', async () => {
+      await startTen()
+      markRound((_, i) => i < 7)
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      markRound(() => true)
+      expect(scoreText()).toBe('3 / 3')
+      fireEvent.click(screen.getByRole('button', { name: 'New round' }))
+      expect(screen.getByText('Card 1 of 10')).toBeTruthy()
+    })
+
+    it('Edit deck shows the filled paste screen with the textarea focused', async () => {
+      const ui = await mount()
+      fireEvent.change(ui.textarea(), { target: { value: 'a - 1\nb - 2' } })
+      fireEvent.click(ui.save())
+      markRound((_, i) => i === 0)
+      expect(scoreText()).toBe('1 / 2')
+      fireEvent.click(screen.getByRole('button', { name: 'Edit deck' }))
+      expect(screen.queryByRole('region', { name: 'Score' })).toBeNull()
+      expect(screen.queryByRole('region', { name: 'Quiz' })).toBeNull()
+      expect(ui.textarea().value).toBe('a - 1\nb - 2')
+      expect(document.activeElement).toBe(ui.textarea())
+      expect(screen.getByText('2 cards · 0 skipped')).toBeTruthy()
+    })
+
+    it('shows the paste screen with the saved deck and no score after a remount', async () => {
+      await startTen()
+      markRound((_, i) => i < 7)
+      expect(scoreText()).toBe('7 / 10')
+
+      cleanup()
+      const ui = await mount()
+      expect(ui.textarea().value).toBe(tenLines)
+      expect(screen.queryByRole('region', { name: 'Score' })).toBeNull()
+      expect(screen.queryByText('7 / 10')).toBeNull()
+    })
+
+    it('writes nothing to storage on Retry missed or New round', async () => {
+      await startTen()
+      const save = vi.spyOn(deckStore, 'saveDeck')
+      const clear = vi.spyOn(deckStore, 'clearDeck')
+      const setItem = vi.spyOn(Storage.prototype, 'setItem')
+      const removeItem = vi.spyOn(Storage.prototype, 'removeItem')
+      markRound((_, i) => i < 7)
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      markRound(() => false)
+      fireEvent.click(screen.getByRole('button', { name: 'Retry missed' }))
+      markRound(() => true)
+      fireEvent.click(screen.getByRole('button', { name: 'New round' }))
+      markRound(() => true)
+      expect(save).not.toHaveBeenCalled()
+      expect(clear).not.toHaveBeenCalled()
+      expect(setItem).not.toHaveBeenCalled()
+      expect(removeItem).not.toHaveBeenCalled()
     })
   })
 })
