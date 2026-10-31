@@ -1,7 +1,7 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Card } from '@/lib/flashflip/types'
-import { QuizScreen } from './quiz-screen'
+import { EXIT_MS, QuizScreen } from './quiz-screen'
 
 afterEach(cleanup)
 
@@ -66,5 +66,101 @@ describe('QuizScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Missed it' }))
     expect(onMark).toHaveBeenLastCalledWith('missed')
     expect(onMark).toHaveBeenCalledTimes(2)
+  })
+
+  it('shows a "Tap to flip" hint on the term face only', () => {
+    const { flip } = setup()
+    expect(screen.getByText('Tap to flip')).toBeTruthy()
+    fireEvent.click(flip())
+    expect(screen.queryByText('Tap to flip')).toBeNull()
+  })
+
+  it('gives the mark buttons aria-hidden icons, the text labels as names, and 56px height', () => {
+    const { flip } = setup()
+    fireEvent.click(flip())
+    const buttons = [screen.getByRole('button', { name: 'Missed it' }), screen.getByRole('button', { name: 'Knew it' })]
+    for (const b of buttons) {
+      expect(b.className).toContain('min-h-14')
+      expect(b.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    }
+  })
+
+  it('uses the sun-soft back on the definition face', () => {
+    const { flip } = setup()
+    expect(flip().className).toContain('bg-card')
+    fireEvent.click(flip())
+    expect(flip().className).toContain('bg-sun-soft')
+  })
+
+  it('fills the aria-hidden progress bar to (position - 1) / total', () => {
+    const { flip } = setup()
+    const bar = document.querySelector('[data-progress]') as HTMLElement
+    expect(bar.parentElement?.getAttribute('aria-hidden')).toBe('true')
+    expect(bar.style.width).toBe('30%')
+    fireEvent.click(flip())
+    expect(bar.style.width).toBe('30%')
+  })
+
+  describe('mark motion', () => {
+    const original = window.matchMedia
+
+    function stubMotion(reduce: boolean) {
+      window.matchMedia = vi.fn((query: string) => ({
+        matches: reduce && query.includes('reduce'),
+        media: query,
+      })) as unknown as typeof window.matchMedia
+    }
+
+    afterEach(() => {
+      window.matchMedia = original
+      vi.useRealTimers()
+    })
+
+    it('plays the exit right, ignores a second press, then calls onMark once', () => {
+      stubMotion(false)
+      vi.useFakeTimers()
+      const { flip, onMark } = setup()
+      fireEvent.click(flip())
+      fireEvent.click(screen.getByRole('button', { name: 'Knew it' }))
+      expect(onMark).not.toHaveBeenCalled()
+      expect(flip().className).toContain('motion-safe:animate-exit-right')
+      fireEvent.click(screen.getByRole('button', { name: 'Knew it' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Missed it' }))
+      act(() => vi.advanceTimersByTime(EXIT_MS))
+      expect(onMark).toHaveBeenCalledTimes(1)
+      expect(onMark).toHaveBeenCalledWith('knew')
+    })
+
+    it('exits left on Missed it', () => {
+      stubMotion(false)
+      vi.useFakeTimers()
+      const { flip, onMark } = setup()
+      fireEvent.click(flip())
+      fireEvent.click(screen.getByRole('button', { name: 'Missed it' }))
+      expect(flip().className).toContain('motion-safe:animate-exit-left')
+      act(() => vi.advanceTimersByTime(EXIT_MS))
+      expect(onMark).toHaveBeenCalledWith('missed')
+    })
+
+    it('grows the progress fill to position / total while the card exits', () => {
+      stubMotion(false)
+      vi.useFakeTimers()
+      render(<QuizScreen card={card} position={3} total={10} onMark={vi.fn()} />)
+      const bar = document.querySelector('[data-progress]') as HTMLElement
+      expect(bar.style.width).toBe('20%')
+      fireEvent.click(screen.getByRole('button', { name: 'mitosis' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Knew it' }))
+      expect(bar.style.width).toBe('30%')
+    })
+
+    it('calls onMark at once with reduced motion, with no exit motion', () => {
+      stubMotion(true)
+      const { flip, onMark } = setup()
+      fireEvent.click(flip())
+      fireEvent.click(screen.getByRole('button', { name: 'Missed it' }))
+      expect(onMark).toHaveBeenCalledTimes(1)
+      expect(onMark).toHaveBeenCalledWith('missed')
+      expect(flip().className).not.toContain('animate-exit')
+    })
   })
 })

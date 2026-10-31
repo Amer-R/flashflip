@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { parseDeck } from '@/lib/flashflip/parse'
 import * as deckStore from '@/lib/storage/deck-store'
 import { FlashFlipApp } from './flashflip-app'
+import { EXIT_MS } from './quiz-screen'
 
 afterEach(() => {
   cleanup()
@@ -45,7 +46,7 @@ function flipAndMark(result: 'Knew it' | 'Missed it') {
 
 /** The score screen's `known / total` text. */
 function scoreText() {
-  return screen.getByRole('region', { name: 'Score' }).querySelector('h2 > span')?.textContent
+  return screen.getByRole('region', { name: 'Score' }).querySelector('h2 [data-score]')?.textContent
 }
 
 /** Mark every remaining card, Knew it when `knew(term, i)` is true; returns the terms shown, by result. */
@@ -66,14 +67,16 @@ describe('FlashFlipApp', () => {
   it('saves a deck that survives a remount (reload)', async () => {
     let ui = await mount()
     fireEvent.change(ui.textarea(), { target: { value: fiveLines } })
-    expect(screen.getByText('4 cards · 1 skipped')).toBeTruthy()
+    expect(screen.getByText('4 cards')).toBeTruthy()
+    expect(screen.getByText('1 skipped')).toBeTruthy()
     fireEvent.click(ui.save())
     expect(deckStore.loadDeck()).toEqual(parseDeck('a - 1\nb - 2\nc - 3\nd - 4').cards)
 
     cleanup()
     ui = await mount()
     expect(ui.textarea().value).toBe('a - 1\nb - 2\nc - 3\nd - 4')
-    expect(screen.getByText('4 cards · 0 skipped')).toBeTruthy()
+    expect(screen.getByText('4 cards')).toBeTruthy()
+    expect(screen.queryByText(/skipped/)).toBeNull()
   })
 
   it('replaces the saved deck with the new one', async () => {
@@ -162,6 +165,68 @@ describe('FlashFlipApp', () => {
     expect(ui.textarea().value).toBe('a - b\nc - d')
     expect(ui.status()).toBe('')
     expect(document.activeElement).not.toBe(ui.textarea())
+  })
+
+  describe('header', () => {
+    const subtitle = 'Paste your notes. Flip. Learn.'
+
+    it('shows the full title and subtitle on Paste, and the slim bar on Quiz and Score', async () => {
+      const ui = await mount()
+      expect(screen.getByRole('heading', { level: 1, name: 'FlashFlip' })).toBeTruthy()
+      expect(screen.getByText(subtitle)).toBeTruthy()
+
+      fireEvent.change(ui.textarea(), { target: { value: 'a - 1' } })
+      fireEvent.click(ui.save())
+      expect(screen.getByRole('region', { name: 'Quiz' })).toBeTruthy()
+      expect(screen.getByRole('heading', { level: 1, name: 'FlashFlip' })).toBeTruthy()
+      expect(screen.queryByText(subtitle)).toBeNull()
+
+      flipAndMark('Knew it')
+      expect(screen.getByRole('region', { name: 'Score' })).toBeTruthy()
+      expect(screen.getByRole('heading', { level: 1, name: 'FlashFlip' })).toBeTruthy()
+      expect(screen.queryByText(subtitle)).toBeNull()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit deck' }))
+      expect(screen.getByText(subtitle)).toBeTruthy()
+    })
+  })
+
+  describe('mark motion', () => {
+    const original = window.matchMedia
+
+    afterEach(() => {
+      window.matchMedia = original
+      vi.useRealTimers()
+    })
+
+    it('plays the exit, then mounts the next card with focus; a second press does nothing', async () => {
+      window.matchMedia = vi.fn((query: string) => ({ matches: false, media: query })) as unknown as typeof window.matchMedia
+      vi.useFakeTimers()
+      const ui = await mount()
+      fireEvent.change(ui.textarea(), { target: { value: 'a - 1\nb - 2\nc - 3' } })
+      fireEvent.click(ui.save())
+      const first = flipControl()
+      fireEvent.click(first)
+      fireEvent.click(screen.getByRole('button', { name: 'Knew it' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Knew it' }))
+      // Still on card 1 while it exits.
+      expect(screen.getByText('Card 1 of 3')).toBeTruthy()
+      expect(flipControl()).toBe(first)
+      act(() => vi.advanceTimersByTime(EXIT_MS))
+      expect(screen.getByText('Card 2 of 3')).toBeTruthy()
+      expect(flipControl()).not.toBe(first)
+      expect(document.activeElement).toBe(flipControl())
+    })
+
+    it('advances immediately under reduced motion', async () => {
+      window.matchMedia = vi.fn((query: string) => ({ matches: true, media: query })) as unknown as typeof window.matchMedia
+      const ui = await mount()
+      fireEvent.change(ui.textarea(), { target: { value: 'a - 1\nb - 2' } })
+      fireEvent.click(ui.save())
+      flipAndMark('Missed it')
+      expect(screen.getByText('Card 2 of 2')).toBeTruthy()
+      expect(document.activeElement).toBe(flipControl())
+    })
   })
 
   describe('quiz round', () => {
@@ -346,7 +411,8 @@ describe('FlashFlipApp', () => {
       expect(screen.queryByRole('region', { name: 'Quiz' })).toBeNull()
       expect(ui.textarea().value).toBe('a - 1\nb - 2')
       expect(document.activeElement).toBe(ui.textarea())
-      expect(screen.getByText('2 cards · 0 skipped')).toBeTruthy()
+      expect(screen.getByText('2 cards')).toBeTruthy()
+      expect(screen.queryByText(/skipped/)).toBeNull()
     })
 
     it('shows the paste screen with the saved deck and no score after a remount', async () => {

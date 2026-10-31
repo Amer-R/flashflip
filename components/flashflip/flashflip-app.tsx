@@ -71,7 +71,18 @@ export function FlashFlipApp() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-6">
+      {state.view === 'paste' ? (
+        <header className="flex flex-col gap-1 pt-6 sm:pt-10">
+          <h1 className="font-display text-[2.25rem] leading-[1.1] font-semibold sm:text-5xl">FlashFlip</h1>
+          <p className="text-base text-ink-soft">Paste your notes. Flip. Learn.</p>
+        </header>
+      ) : (
+        // Slim bar on Quiz and Score, so the card gets the height.
+        <header className="flex min-h-11 items-center">
+          <h1 className="font-display text-lg leading-none font-semibold">FlashFlip</h1>
+        </header>
+      )}
       {state.view === 'paste' && (
         <div ref={pasteRef}>
           <PasteScreen key={deckRevision} deck={state.deck} onStart={handleStart} onClear={handleClear} />
@@ -96,7 +107,7 @@ export function FlashFlipApp() {
         />
       )}
       {/* Lives outside the keyed screen so it stays mounted and its text change is announced. */}
-      <p role="status" className="min-h-5 text-sm text-zinc-600 dark:text-zinc-400">
+      <p role="status" className="min-h-5 text-sm font-medium text-ink-soft">
         {/* Keyed so a repeated identical notice still replaces the text node and is re-announced. */}
         <span key={deckRevision}>{notice}</span>
       </p>

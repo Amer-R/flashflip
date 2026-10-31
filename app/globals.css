@@ -1,38 +1,190 @@
 @import "tailwindcss";
 
+/*
+ * DESIGN.md colour tokens. The light values sit on :root and the dark values replace them under
+ * prefers-color-scheme: dark, so the theme utilities below switch mode without `dark:` prefixes.
+ * `--line` is the outline and offset-shadow colour: ink in light mode, grape-dark in dark mode.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  color-scheme: light;
+  --canvas: #fff7ec;
+  --card: #ffffff;
+  --ink: #1f1a33;
+  --ink-soft: #5a5373;
+  --grape: #6b3fd4;
+  --knew: #13804a;
+  --missed: #c8304f;
+  --sun: #ffd23f;
+  --mint-soft: #c9f5dd;
+  --sun-soft: #fff0b3;
+  --on-solid: #ffffff;
+  --line: #1f1a33;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    --canvas: #17122b;
+    --card: #241c40;
+    --ink: #f6f1ff;
+    --ink-soft: #b8aed6;
+    --grape: #a98bff;
+    --knew: #4fd98f;
+    --missed: #ff7a93;
+    --sun: #ffd23f;
+    --mint-soft: #14432f;
+    --sun-soft: #4a3b0c;
+    --on-solid: #17122b;
+    --line: #a98bff;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-grape: var(--grape);
+  --color-knew: var(--knew);
+  --color-missed: var(--missed);
+  --color-sun: var(--sun);
+  --color-mint-soft: var(--mint-soft);
+  --color-sun-soft: var(--sun-soft);
+  --color-on-solid: var(--on-solid);
+  --color-line: var(--line);
+
+  /* Hard offset shadow, no blur; pressed buttons drop to 1px. */
+  --shadow-sticker: 4px 4px 0 var(--line);
+  --shadow-sticker-pressed: 1px 1px 0 var(--line);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-fredoka), system-ui, sans-serif;
 }
 
-/* Card flip: a quick turn-in of the newly shown face. Only used under motion-safe:. */
-@keyframes flashflip-flip {
-  from {
-    opacity: 0;
-    transform: rotateY(90deg);
+/* Motion. Every animate-* utility is only ever used behind motion-safe:. */
+@theme {
+  --animate-pop-in: flashflip-pop-in 150ms ease-out;
+  --animate-flip-to-back: flashflip-flip-to-back 350ms ease-out;
+  --animate-flip-to-front: flashflip-flip-to-front 350ms ease-out;
+  --animate-face-in: flashflip-face-in 350ms ease-out;
+  --animate-exit-right: flashflip-exit-right 250ms ease-in forwards;
+  --animate-exit-left: flashflip-exit-left 250ms ease-in forwards;
+  --animate-slide-up: flashflip-slide-up 200ms ease-out;
+  --animate-confetti: flashflip-confetti 1.2s ease-in forwards;
+
+  /* The next card pops in with a small scale-up from 0.96. */
+  @keyframes flashflip-pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
-  to {
-    opacity: 1;
-    transform: rotateY(0deg);
+
+  /* A 3D turn on the vertical axis; the fill swaps at the halfway point. */
+  @keyframes flashflip-flip-to-back {
+    0% {
+      transform: perspective(1000px) rotateY(0deg);
+      background-color: var(--card);
+    }
+    50% {
+      transform: perspective(1000px) rotateY(90deg);
+      background-color: var(--card);
+    }
+    50.01% {
+      transform: perspective(1000px) rotateY(-90deg);
+      background-color: var(--sun-soft);
+    }
+    100% {
+      transform: perspective(1000px) rotateY(0deg);
+      background-color: var(--sun-soft);
+    }
+  }
+
+  @keyframes flashflip-flip-to-front {
+    0% {
+      transform: perspective(1000px) rotateY(0deg);
+      background-color: var(--sun-soft);
+    }
+    50% {
+      transform: perspective(1000px) rotateY(90deg);
+      background-color: var(--sun-soft);
+    }
+    50.01% {
+      transform: perspective(1000px) rotateY(-90deg);
+      background-color: var(--card);
+    }
+    100% {
+      transform: perspective(1000px) rotateY(0deg);
+      background-color: var(--card);
+    }
+  }
+
+  /* The new face's text stays hidden until the card is edge-on. */
+  @keyframes flashflip-face-in {
+    0%,
+    50% {
+      opacity: 0;
+    }
+    50.01%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes flashflip-exit-right {
+    to {
+      opacity: 0;
+      transform: translateX(120%) rotate(8deg);
+    }
+  }
+
+  @keyframes flashflip-exit-left {
+    to {
+      opacity: 0;
+      transform: translateX(-120%) rotate(-8deg);
+    }
+  }
+
+  @keyframes flashflip-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes flashflip-confetti {
+    from {
+      opacity: 1;
+      transform: translateY(-2rem) rotate(0deg);
+    }
+    80% {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(var(--fall, 20rem)) rotate(var(--spin, 360deg));
+    }
+  }
+}
+
+@layer base {
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+  }
+
+  /* DESIGN.md focus ring: 3px grape outline, 3px offset; grape switches to grape-dark in dark mode. */
+  :focus-visible {
+    outline: 3px solid var(--grape);
+    outline-offset: 3px;
   }
 }

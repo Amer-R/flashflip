@@ -22,21 +22,42 @@ describe('PasteScreen', () => {
     const { textarea, save } = setup()
     expect(textarea.value).toBe('')
     expect(save.disabled).toBe(true)
-    expect(screen.getByText('0 cards · 0 skipped')).toBeTruthy()
+    expect(screen.getByText('0 cards')).toBeTruthy()
+    expect(screen.queryByText(/skipped/)).toBeNull()
   })
 
-  it('shows live counts and enables Start', () => {
+  it('shows live count chips, with the skipped chip, inside the live line, and enables Start', () => {
     const { textarea, save } = setup()
     fireEvent.change(textarea, { target: { value: fiveLines } })
-    expect(screen.getByText('4 cards · 1 skipped')).toBeTruthy()
+    const cardsChip = screen.getByText('4 cards')
+    const skippedChip = screen.getByText('1 skipped')
+    const live = cardsChip.closest('[aria-live="polite"]')
+    expect(live).not.toBeNull()
+    expect(live?.contains(skippedChip)).toBe(true)
+    expect(live?.textContent).toBe('4 cards 1 skipped')
     expect(save.disabled).toBe(false)
+  })
+
+  it('shows only the cards chip when nothing is skipped', () => {
+    const { textarea } = setup()
+    fireEvent.change(textarea, { target: { value: 'a - 1\nb - 2\nc - 3\nd - 4' } })
+    expect(screen.getByText('4 cards')).toBeTruthy()
+    expect(screen.queryByText(/skipped/)).toBeNull()
+    expect(screen.getByText('4 cards').closest('[aria-live="polite"]')?.textContent).toBe('4 cards')
   })
 
   it('keeps Start disabled when every line is malformed', () => {
     const { textarea, save } = setup()
     fireEvent.change(textarea, { target: { value: 'a-b\nx - \n - y\nplain' } })
-    expect(screen.getByText('0 cards · 4 skipped')).toBeTruthy()
+    expect(screen.getByText('0 cards')).toBeTruthy()
+    expect(screen.getByText('4 skipped')).toBeTruthy()
     expect(save.disabled).toBe(true)
+  })
+
+  it('has 48px buttons', () => {
+    const { save, clear } = setup()
+    expect(save.className).toContain('min-h-12')
+    expect(clear.className).toContain('min-h-12')
   })
 
   it('calls onStart with exactly the previewed cards and skipped count', () => {
@@ -53,7 +74,8 @@ describe('PasteScreen', () => {
     const deck = parseDeck('a - b\nc - d - e').cards
     const { textarea } = setup(deck)
     expect(textarea.value).toBe('a - b\nc - d - e')
-    expect(screen.getByText('2 cards · 0 skipped')).toBeTruthy()
+    expect(screen.getByText('2 cards')).toBeTruthy()
+    expect(screen.queryByText(/skipped/)).toBeNull()
     expect(screen.queryByRole('status')).toBeNull()
   })
 
