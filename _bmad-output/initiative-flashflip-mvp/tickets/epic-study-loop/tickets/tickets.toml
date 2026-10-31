@@ -31,3 +31,16 @@ covers = ["R5", "R6", "R7", "R8", "R9"]
 after = [2] # needs completed rounds from story 2
 hitl = false
 risk = "low" # derived score over an existing round model
+
+[[entry]]
+id = 4
+type = "story"
+title = "Playful visual refresh"
+description = "Restyles the paste, quiz and score screens to the playful sticker design in the UX documents: the palette in light and dark, Fredoka for display and buttons, outlined cards and buttons with hard offset shadows, count chips, a progress bar, a slim header on quiz and score, the 3D flip, the mark exit motion and confetti on full marks. Changes no label, behaviour, storage or focus rule from stories 1-3."
+verify = "At 375px and on a laptop, in light and dark mode, each screen matches DESIGN.md and EXPERIENCE.md (and the quiz matches mockups/key-quiz.html); with reduced motion on, flip, exit, progress and confetti are instant and the loop still runs paste to retry; no screen scrolls sideways at 320px; npm test, lint and the static build pass."
+covers = ["R8", "R10"]
+after = [3] # restyles the screens stories 1-3 built
+hitl = false
+risk = "medium" # touches every screen and moves the page header; the classroom demo depends on it
+references = ["_bmad-output/initiative-flashflip-mvp/ux-flashflip/DESIGN.md", "_bmad-output/initiative-flashflip-mvp/ux-flashflip/EXPERIENCE.md", "_bmad-output/initiative-flashflip-mvp/ux-flashflip/mockups/key-quiz.html"]
+notes = ["The page header moves from app/page.tsx into the client root so it can shrink to a slim bar on quiz and score; the page stays static with its one Suspense (AD-2).", "Fredoka loads with next/font/google; no new npm dependency."]

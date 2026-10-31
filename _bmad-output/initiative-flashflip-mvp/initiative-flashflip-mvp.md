@@ -3,7 +3,7 @@ type: initiative
 title: "Students quiz themselves on their own pasted terms"
 parent: none
 sources: [_bmad-output/initiative-flashflip-mvp/brief-flashflip/brief-flashflip.md]
-companions: [_bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md]
+companions: [_bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md, _bmad-output/initiative-flashflip-mvp/ux-flashflip/DESIGN.md, _bmad-output/initiative-flashflip-mvp/ux-flashflip/EXPERIENCE.md]
 after: []
 risk: low
 ---
@@ -29,12 +29,14 @@ First-year students revising on their phones can test themselves on their own te
 - R7 (brief Solution): The pasted deck survives a page reload. Knew it / Missed it results last only for the current visit.
 - R8 (brief Solution): The layout is phone-first, with one card per screen and large tap targets. It also works on a laptop.
 - R9 (user 2026-10-28): A quiz can start only when at least one card has been parsed. Pasting new lines replaces the saved deck, and a **Clear deck** control removes it.
+- R10 (user 2026-10-31): Every screen follows the playful visual design in the UX documents, in light and dark mode. Labels, behaviour, storage and the R1–R9 results do not change. With reduced motion turned on, every screen works with no animation.
 
 ## Constraints
 
 - No login, accounts, server or database. Everything stays in the browser (brief Summary, Scope Out).
 - The stack is fixed: Next.js App Router, TypeScript, Tailwind CSS, localStorage, one page, deployed on Vercel (user, 2026-10-28; architecture spine).
 - Losing the deck when browser data is cleared is accepted (brief Solution).
+- The visual refresh adds no runtime dependency. The Fredoka font loads through `next/font/google`, which ships with Next (user, 2026-10-31).
 
 ## Done when
 
@@ -53,6 +55,8 @@ First-year students revising on their phones can test themselves on their own te
 
 - brief — _bmad-output/initiative-flashflip-mvp/brief-flashflip/brief-flashflip.md, sections Solution, Success Criteria, Scope
 - architecture — _bmad-output/initiative-flashflip-mvp/architecture-flashflip/architecture-flashflip.md, sections Invariants & Rules (AD-1 to AD-12), Stack
+- design — _bmad-output/initiative-flashflip-mvp/ux-flashflip/DESIGN.md, all sections
+- design — _bmad-output/initiative-flashflip-mvp/ux-flashflip/EXPERIENCE.md, all sections; mock at ux-flashflip/mockups/key-quiz.html
 
 ## Notes
 
@@ -62,3 +66,5 @@ First-year students revising on their phones can test themselves on their own te
 - Decision: 2026-10-28 — Sliced into one epic, `epic-study-loop`, with three stories. Shuffle moved from the score story into the quiz story because the architecture shuffles at round start (AD-7).
 - Decision: 2026-10-28 — A reload restores the deck only, never a round in progress (architecture AD-8).
 - Decision: 2026-10-28 — UX design (`bmad-ux`) declined. The builder lays out the screens within the architecture's Styling and Accessibility conventions.
+- Decision: 2026-10-31 — The 2026-10-28 UX decline is reversed. A playful visual design was captured in `ux-flashflip` after the MVP loop shipped, and is added as R10.
+- Decision: 2026-10-31 — The visual refresh is story 4 in `epic-study-loop`, after story 3, risk medium.

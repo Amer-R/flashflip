@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlashFlip Quiz Mock</title>
+<style>
+/*
+  Key screen: Quiz (FlashFlip), phone frames 375px wide.
+  Governing spine sections:
+    EXPERIENCE.md -> Information Architecture (slim bar on Quiz), Component Patterns
+      (Card, Knew it / Missed it, Progress bar, Buttons), State Patterns (Term face,
+      Definition face, Dark mode), Interaction Primitives (Flip, Mark exit, Progress fill),
+      Accessibility Floor (focus ring, labels with icons), Key Flows -> Flow 1 steps 2-4.
+    DESIGN.md -> Colors, Typography, Layout & Spacing (quiz card fills height, buttons at
+      thumb reach), Elevation & Depth (hard offset shadow), Shapes, Components (Card,
+      Knew it / Missed it, Progress bar, Focus ring).
+  Fonts: inline CSS cannot load Fredoka / Geist offline. Stacks used:
+    Fredoka -> Fredoka, ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif
+    Geist Sans -> "Geist Sans", Geist, system-ui, sans-serif
+  The product loads Fredoka via next/font/google; this mock shows a fallback if not installed.
+  Static: no JS, no network, no animation. Motion is named in each caption.
+*/
+
+/* Light tokens (DESIGN.md colors) */
+.light {
+  --canvas: #FFF7EC;
+  --card: #FFFFFF;
+  --ink: #1F1A33;
+  --ink-soft: #5A5373;
+  --grape: #6B3FD4;
+  --knew: #13804A;
+  --missed: #C8304F;
+  --sun-soft: #FFF0B3;
+  --on-solid: #FFFFFF;
+  --line: #1F1A33;          /* outlines + shadows: ink in light */
+  --focus: #6B3FD4;
+}
+/* Dark tokens: outlines and offset shadows switch to grape-dark */
+.dark {
+  --canvas: #17122B;
+  --card: #241C40;
+  --ink: #F6F1FF;
+  --ink-soft: #B8AED6;
+  --grape: #A98BFF;
+  --knew: #4FD98F;
+  --missed: #FF7A93;
+  --sun-soft: #4A3B0C;
+  --on-solid: #17122B;
+  --line: #A98BFF;
+  --focus: #A98BFF;
+}
+
+:root {
+  --fredoka: Fredoka, ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+  --geist: "Geist Sans", Geist, system-ui, sans-serif;
+  --outline: 2px;
+  --shadow-offset: 4px;
+  --r-sm: 12px;
+  --r-md: 20px;
+  --r-lg: 28px;
+  --r-full: 9999px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #ECE7F5;
+  color: #1F1A33;
+  font-family: var(--geist);
+  padding: 32px 16px 48px;
+}
+.page-title {
+  font-family: var(--fredoka);
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.page-sub { font-size: 0.875rem; color: #5A5373; margin-bottom: 24px; max-width: 60rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(375px, 375px));
+  gap: 32px;
+  justify-content: center;
+}
+@media (max-width: 420px) {
+  .grid { grid-template-columns: minmax(0, 375px); }
+}
+
+figure { width: 100%; max-width: 375px; }
+
+/* Device frame */
+.phone {
+  width: 100%;
+  max-width: 375px;
+  height: 740px;
+  border: 10px solid #0E0B18;
+  border-radius: 44px;
+  overflow: hidden;
+  background: var(--canvas);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 0 1px #3A3450;
+}
+.statusbar { height: 28px; flex: none; }
+
+/* Screen column: 16px side margin, spacing.5 between groups */
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 24px;
+  gap: 24px;
+  color: var(--ink);
+  min-height: 0;
+}
+
+/* Slim header bar (memlog decision): small title only */
+.slimbar {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--fredoka);
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* Progress group: "Card N of M" + progress bar, spacing.3 inside the group */
+.progress-group { display: flex; flex-direction: column; gap: 12px; }
+.meta {
+  font-family: var(--geist);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+.progress {
+  height: 12px;
+  background: var(--card);
+  border: var(--outline) solid var(--line);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  width: 20%; /* (position - 1) / total = (3 - 1) / 10 */
+  background: var(--grape);
+}
+
+/* Card group: card takes remaining height */
+.card-group { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.flashcard {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background: var(--card);
+  color: var(--ink);
+  border: var(--outline) solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--line);
+  max-height: 28rem;
+  font: inherit;
+  cursor: pointer;
+}
+.flashcard.term {
+  font-family: var(--fredoka);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.flashcard.definition {
+  background: var(--sun-soft);
+  font-family: var(--geist);
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+/* Focus ring: 3px grape outline, 3px offset (shown in frame 1) */
+.flashcard.is-focused { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.hint {
+  text-align: center;
+  font-family: var(--geist);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+/* Mark buttons: two-column grid, Missed it left, Knew it right, 56px */
+.marks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mark {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: var(--outline) solid var(--line);
+  border-radius: var(--r-full);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--line);
+  color: var(--on-solid);
+  font-family: var(--fredoka);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+.mark.missed { background: var(--missed); }
+.mark.knew { background: var(--knew); }
+
+figcaption {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #1F1A33;
+}
+figcaption strong { font-family: var(--fredoka); font-weight: 600; font-size: 1rem; display: block; }
+figcaption em { color: #5A5373; font-style: normal; display: block; margin-top: 2px; }
+</style>
+</head>
+<body>
+  <h1 class="page-title">Quiz: key screen</h1>
+  <p class="page-sub">Phone, 375px. Flow 1 (Lina, first-year biology), card 3 of 10. Light and dark mode, term face and definition face. Static mock; the spine is the contract.</p>
+
+  <div class="grid">
+
+    <!-- 1. Light, term face, focus ring on the card -->
+    <figure>
+      <div class="phone light">
+        <div class="statusbar" aria-hidden="true"></div>
+        <div class="screen">
+          <div class="slimbar">FlashFlip</div>
+          <div class="progress-group">
+            <p class="meta">Card 3 of 10</p>
+            <div class="progress" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="card-group">
+            <button class="flashcard term is-focused" type="button">mitochondria</button>
+            <p class="hint">Tap to flip</p>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <strong>1. Light, term face</strong>
+        Term centred, "Tap to flip" hint, no mark buttons; focus ring on the card.
+        <em>Motion: tap plays the 3D flip, 350ms ease-out, face swaps halfway.</em>
+      </figcaption>
+    </figure>
+
+    <!-- 2. Light, definition face -->
+    <figure>
+      <div class="phone light">
+        <div class="statusbar" aria-hidden="true"></div>
+        <div class="screen">
+          <div class="slimbar">FlashFlip</div>
+          <div class="progress-group">
+            <p class="meta">Card 3 of 10</p>
+            <div class="progress" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="card-group">
+            <button class="flashcard definition" type="button">the part of the cell that releases energy from food</button>
+          </div>
+          <div class="marks">
+            <button class="mark missed" type="button"><span aria-hidden="true">↺</span>Missed it</button>
+            <button class="mark knew" type="button"><span aria-hidden="true">✓</span>Knew it</button>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <strong>2. Light, definition face</strong>
+        Definition on the sun-soft back; Missed it left, Knew it right, within thumb reach.
+        <em>Motion: buttons slide up into place; Knew it flies the card right, Missed it left (250ms); bar eases to 30% (250ms).</em>
+      </figcaption>
+    </figure>
+
+    <!-- 3. Dark, term face -->
+    <figure>
+      <div class="phone dark">
+        <div class="statusbar" aria-hidden="true"></div>
+        <div class="screen">
+          <div class="slimbar">FlashFlip</div>
+          <div class="progress-group">
+            <p class="meta">Card 3 of 10</p>
+            <div class="progress" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="card-group">
+            <button class="flashcard term" type="button">mitochondria</button>
+            <p class="hint">Tap to flip</p>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <strong>3. Dark, term face</strong>
+        Plum-ink canvas, card-dark sticker with grape-dark outline and hard shadow.
+        <em>Motion: same 3D flip; with reduced motion the face swaps instantly.</em>
+      </figcaption>
+    </figure>
+
+    <!-- 4. Dark, definition face -->
+    <figure>
+      <div class="phone dark">
+        <div class="statusbar" aria-hidden="true"></div>
+        <div class="screen">
+          <div class="slimbar">FlashFlip</div>
+          <div class="progress-group">
+            <p class="meta">Card 3 of 10</p>
+            <div class="progress" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="card-group">
+            <button class="flashcard definition" type="button">the part of the cell that releases energy from food</button>
+          </div>
+          <div class="marks">
+            <button class="mark missed" type="button"><span aria-hidden="true">↺</span>Missed it</button>
+            <button class="mark knew" type="button"><span aria-hidden="true">✓</span>Knew it</button>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <strong>4. Dark, definition face</strong>
+        Sun-soft-dark back; missed-dark and knew-dark pills with plum-ink labels.
+        <em>Motion: next card pops in from 0.96 scale (150ms); focus moves to it on mount.</em>
+      </figcaption>
+    </figure>
+
+  </div>
+</body>
+</html>
