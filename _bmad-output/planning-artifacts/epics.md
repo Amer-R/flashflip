@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics']
+stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-story-1', 'step-03-story-2', 'step-03-create-stories', 'step-04-final-validation']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prds/prd-flashflip-2026-11-10/prd.md'
   - '_bmad-output/planning-artifacts/architecture.md'
@@ -183,27 +183,152 @@ A first-year student can paste notes in whatever format they arrive, get flashca
 - Closing checks: the security headers (AD-4), the manual NFR checklist (`docs/manual-checklist.md`) and the README are the last tasks of Story 3, since they all run on a production build. Deployment is not a story: the route is chosen at deploy time (AD-12).
 - Real pastes: PRD §9 question 1 asks for at least 10 real pastes before FR-2 to FR-4 are frozen. They are input to Story 3.
 
-<!-- Repeat for each epic in epics_list (N = 1, 2, 3...) -->
 
-## Epic {{N}}: {{epic_title_N}}
+## Epic 1: Study from your own notes in seconds
 
-{{epic_goal_N}}
+A first-year student can paste notes in whatever format they arrive, get flashcards in seconds, and flip through them on a phone. They mark each card "Knew it" or "Missed it", see an honest Score, and find the deck still there after a refresh. Everything stays on the device, with no account.
 
-<!-- Repeat for each story (M = 1, 2, 3...) within epic N -->
+### Story 1.1: Paste cards and flip quiz
 
-### Story {{N}}.{{M}}: {{story_title_N_M}}
+As a first-year student,
+I want to paste my notes, get cards, and flip through them marking what I knew,
+So that I can start studying within a minute of pasting.
 
-As a {{user_type}},
-I want {{capability}},
-So that {{value_benefit}}.
+**Covers:** FR-1, FR-7, FR-8, FR-9, a first parser (tab, spaced dash, colon), a basic Skipped-line list, the "No cards could be made" refusal, and the starter housekeeping (AD-5, AD-6, AD-7 begin here).
 
 **Acceptance Criteria:**
 
-<!-- for each AC on this story -->
+**Given** the starter repo, **When** the story is done, **Then** the demo page, "Create Next App" metadata, `public/` SVGs and the Arial `body` rule are gone, the versions in Additional Requirements are installed, `typecheck` and `test` scripts exist, `engines.node` is `>=22.12`, and `vitest.config.ts` has the "core" (Node) and "dom" (jsdom) projects with one passing test.
+**And** `npm run lint`, `typecheck`, `test` and `build` all pass.
 
-**Given** {{precondition}}
-**When** {{action}}
-**Then** {{expected_outcome}}
-**And** {{additional_criteria}}
+**Given** `docs/design-sheet.md` has not been approved, **When** UI work would begin, **Then** the sheet is drafted (palette pairs with contrast checks in both themes, type scale, radii, motion timings, tone examples) and work stops for the user's approval first.
+**And** the pure core (types, parser, reducer) is not held by this gate.
 
-<!-- End story repeat -->
+**Given** the Paste box is empty or whitespace only, **When** the Student looks at "Make cards", **Then** it is disabled.
+**And** pressing Enter in the box inserts a line break and never triggers it.
+
+**Given** Paste text with tab-, spaced-dash- and colon-separated lines (first-pass rules, in that order of precedence), **When** the Student taps "Make cards", **Then** each such line becomes a Card `{ term, definition }` and the Ready screen appears, replacing any existing Deck.
+**And** every non-blank line that makes no Card is listed as a Skipped line with its line number, first 80 characters and reason.
+
+**Given** no line becomes a Card, **When** the Student taps "Make cards", **Then** they stay on the Paste screen with their text intact and see "No cards could be made", with the Skipped lines listed below the box.
+
+**Given** the Ready screen, **When** it shows, **Then** it shows "N cards, M skipped", the Skipped lines, a preview of the first 3 Cards as Term → Definition, "Start", "Edit text" and "New deck".
+**And** "Edit text" returns to the Paste screen with the same text and keeps the Deck.
+**And** "Start" opens the Study screen at Card 1 of N with no Marks.
+**And** "New deck" discards the Deck and opens an empty Paste screen.
+
+**Given** the Study screen, **When** a Card appears, **Then** the Term shows first with "n of N".
+**And** a tap, click, Enter or Space flips it to the Definition and back.
+**And** "Knew it" and "Missed it" stay disabled until the Card has been flipped once.
+**And** marking records one Mark, shows the next Card Term-first with n up by 1, and cannot be undone.
+**And** marking the last Card opens a bare Result screen (Score and Shuffle come in Story 2).
+
+**Given** any screen, **When** it is used, **Then** every control works by keyboard with a visible focus ring, tap targets are at least 44×44 px, text is readable at 320 px width, all Student-facing strings come from `lib/copy.ts`, and Term and Definition render as plain React text in separate elements with `dir="auto"`.
+
+**Given** the core, **When** it is read, **Then** the parser and reducer are pure (no `react`, `next/*` or browser globals), return typed results, and have tests titled with their FR IDs.
+
+### Story 1.2: Score, shuffle and keep cards after refresh
+
+As a first-year student,
+I want to see my score, shuffle the cards, and find my deck still there after a refresh,
+So that I can repeat passes and come back to my notes without redoing anything.
+
+**Covers:** FR-10 to FR-16, plus AD-1, AD-2, AD-8, PAT-9, PAT-11, PAT-13 and PAT-18, and the design tokens, flip animation, swipe, confetti and reduced-motion fallbacks (AD-10, once the design sheet is approved).
+
+**Acceptance Criteria:**
+
+**Given** a finished Pass, **When** the Result screen opens, **Then** it shows the Score as "X of N (P%)", with P rounded half up (5 of 7 → 71%, 1 of 8 → 13%, 3 of 8 → 38%, 0 of 4 → 0%, 4 of 4 → 100%, and a 1-Card Deck "1 of 1 (100%)" or "0 of 1 (0%)").
+
+**Given** the Result screen, **When** the Student taps "Start again", **Then** all Marks clear and a new Pass starts at Card 1 of N, in Deck order if Shuffle is off or in a new random order if it is on.
+**And** "New deck" discards the Deck and Pass and opens an empty Paste screen.
+
+**Given** the Study screen with at least one Mark, **When** the Student taps "New deck", **Then** a native `<dialog>` asks "Discard this deck and your progress?".
+**And** declining changes nothing.
+**And** with no Marks, or on the Ready screen, no confirmation appears.
+
+**Given** the Ready or Result screen, **When** the Student toggles Shuffle, **Then** the setting changes (off by default).
+**And** it is never offered on the Study screen.
+**And** with Shuffle on, a Pass visits every Card exactly once (tested for Decks of 1, 2, 10 and 1,000 Cards), and the order stays fixed during the Pass and after a reload.
+
+**Given** a 3-Card Deck and a seeded random source, **When** 10,000 Passes start with Shuffle on, **Then** each of the six orders occurs in 14.7% to 18.7% of them.
+**And** an exhaustive check of every draw sequence confirms the permutation is unbiased.
+**And** neither the reducer nor `shuffle.ts` calls `Math.random`; the caller passes the order in the `pass-started` action.
+
+**Given** a Deck is made, or a Mark, "Start", "Start again" or Shuffle change happens, **When** the state updates, **Then** the Saved state is written to `flashflip:saved-state` after the update, outside the tap's critical path.
+**And** it holds `version`, `parserVersion`, `pasteText`, `screen`, `shuffle`, `order` and `marks`, but not the Deck, Skipped lines or position, which are re-derived.
+
+**Given** a Deck of 10 Cards with 4 Marked, **When** the page reloads, **Then** it opens on Card 5 of 10, Term first, with the same order and Marks.
+**And** a reload on the Result screen shows the same Score.
+**And** a reload on the Ready screen shows the same Cards, Skipped lines and Shuffle setting, and "Edit text" shows the same Paste text.
+**And** with no Saved state the app opens on an empty Paste screen, with a neutral skeleton shown until the restore finishes so the Paste screen never flashes first.
+
+**Given** stored data that is invalid, inconsistent with the re-derived Deck, or of an unknown version, **When** the page opens, **Then** it is ignored and the app opens on the Paste screen without crashing.
+**And** on a `parserVersion` mismatch the Paste text is kept, progress is dropped, and the app opens on the Ready screen.
+
+**Given** the Ready, Study and Result screens, **When** each shows, **Then** it shows a visible, non-collapsed notice, in at least body-size text, that the Deck lives only in this browser on this device, that clearing site data deletes it, and that on iPhone Safari it may be deleted after about a week unless the site is added to the Home Screen.
+
+**Given** storage is blocked, unavailable or full, **When** the app tries to save, **Then** every screen keeps working and shows "Can't save here: your deck will be lost when you close this tab".
+**And** only `lib/storage/` touches `localStorage` and returns typed results.
+
+**Given** the approved design sheet, **When** the UI is styled, **Then** tokens live in `app/globals.css` under `@theme`, with dark first and light following the system setting, and both clear WCAG 2.2 AA contrast.
+**And** the 3D flip, screen transitions, swipe-to-Mark (enabled only after a flip, with buttons and keyboard kept) and the Result confetti have `motion-reduce` fallbacks.
+
+**Given** the Student marks the last Card of a Pass, **When** the Result screen opens, **Then** a completion effect plays: a CSS confetti burst and a congratulation headline above the Score (for example "Pass complete!", casual wording from the design sheet's tone examples, since the PRD fixes no text here).
+**And** the headline and Score are real text, announced once through the `aria-live="polite"` region, and the Score is never hidden behind the effect.
+**And** the effect is decorative (`aria-hidden`), runs once per Pass, stays inside the viewport with no horizontal scrolling at 320 px, and never blocks "Start again", "New deck" or Shuffle.
+**And** with `prefers-reduced-motion` the confetti is replaced by a static celebration (the headline with a still accent), and the effect adds no network request, library or third-party asset.
+**And** the headline reads the same for any Score, so a low Score is never framed as failure (precision over praise: the honest Score stays the main number).
+**And** "Start again" replays the effect at the end of the next Pass; reloading on the Result screen shows the headline and Score but does not replay the burst.
+
+### Story 1.3: Bulletproof paste
+
+As a first-year student,
+I want my messy notes from Notion, Google Docs or chat apps to turn into the right cards, with anything unreadable listed rather than dropped,
+So that I can trust the deck matches my notes.
+
+**Covers:** FR-2 to FR-6 in full, FR-17, AD-3, AD-4 and AD-9, NFR-1 to NFR-4 on a production build, and the closing checks (`docs/manual-checklist.md`, README). It builds on the Story 1.1 parser, completing it against all 31 acceptance rows (P-01 to P-31).
+
+**Acceptance Criteria:**
+
+**Given** the typed acceptance table in `lib/core/acceptance-table.ts`, **When** the parser test runs, **Then** every row from P-01 to P-31 passes, with test titles starting with the row ID.
+**And** for every input, Cards + Skipped lines + blank Lines equals the number of Lines.
+**And** `parserVersion` (introduced with Saved state in Story 1.2) is bumped.
+
+**Given** Paste text with CRLF, LF, CR, U+2028 or U+2029 line breaks, **When** it is split, **Then** each break ends a Line and each Line is trimmed of Unicode White_Space, U+FEFF and U+200B.
+**And** a blank Line makes no Card and is not a Skipped line.
+**And** no Term or Definition begins or ends with whitespace, U+FEFF or U+200B.
+
+**Given** a Line that starts with a bullet (•, ◦, ▪, ●, *, -, –, —) or a one- to three-digit number marker with "." or ")" followed by whitespace, **When** it is parsed, **Then** that one marker is removed first.
+**And** `3.14 - pi` and `A. Smith - economist` keep their leading text, and letter markers such as "a)" are not removed.
+
+**Given** a Line with several possible Separators, **When** it is parsed, **Then** the rules apply in this order: tab; a run of Unicode dashes with whitespace on both sides; a colon followed by whitespace, or a fullwidth colon; a run of two or more em dashes.
+**And** the first match within the winning rule wins (`a - b - c` gives "a" and "b - c"), and several tabs put everything after the first in the Definition.
+**And** whitespace runs inside a Term or Definition collapse to one space.
+**And** a hyphen inside a word and a colon with no whitespace after it (`Ratio 3:1`) are not Separators.
+
+**Given** a non-blank Line with no Separator or an empty Term or Definition, **When** "Make cards" runs, **Then** it is listed as a Skipped line with its 1-based line number (blank Lines count), its first 80 grapheme clusters and the reason "no separator", "missing term" or "missing definition".
+**And** an emoji or combining sequence is never split in the 80-character display.
+**And** a wrapped Definition gives one Card and one Skipped line, and duplicate Lines make duplicate Cards.
+
+**Given** Paste text over 200,000 UTF-16 code units, **When** "Make cards" runs, **Then** it is refused with "Too much text (max 200,000 characters)".
+**And** more than 1,000 Cards is refused with "Too many cards (max 1,000)", and no Cards shows "No cards could be made" with the Skipped lines listed.
+**And** exactly 200,000 characters and exactly 1,000 Cards still make a Deck.
+**And** after any refusal the Paste text is intact, the existing Deck is kept, and a reload shows the same Deck as before (or the Paste screen if there was none).
+
+**Given** more than 100 Skipped lines, **When** the Ready screen or the refusal view shows them, **Then** it shows the first 100 and a "Show all N" control, and the rest render with `content-visibility: auto`, so every Skipped line stays listed.
+
+**Given** Cards in any script, **When** they are shown, **Then** the text equals the parsed text character for character, including emoji sequences and combining marks (P-29, P-30).
+**And** Term and Definition sit in separate elements with automatic direction (`خلية` right-to-left, `cell` left-to-right).
+**And** `<b>x</b>` displays as characters and `<img src=x onerror=alert(1)>` runs no script.
+**And** ESLint bans `dangerouslySetInnerHTML` everywhere.
+**And** a 1,000-character Definition wraps with no horizontal scrolling at 320 px, and the Card content scrolls vertically when it is taller than the screen.
+
+**Given** a production build, **When** it is served, **Then** the static security headers from AD-4 are set in `next.config.ts` for production only (CSP with `connect-src 'none'`, `Referrer-Policy: no-referrer`, a `Permissions-Policy` denying camera, microphone and geolocation).
+**And** there are no blocked first-party requests or console violations.
+**And** pasting, making Cards, studying and finishing a Pass cause no network requests, set no cookies, and load no third-party scripts, fonts or analytics.
+
+**Given** 1,000 Lines, **When** "Make cards" runs, **Then** it completes within 500 ms on a mid-range phone (measured and recorded in the checklist), and Study taps show their result within 200 ms.
+
+**Given** the finished app, **When** the closing checks run, **Then** `docs/manual-checklist.md` is completed, covering: an axe-core run with no serious or critical issues on the four screens, Safari on iOS and Chrome on Android at 320 px, sample Cards in Latin, Cyrillic, Greek, Arabic, Hebrew, Devanagari, Chinese, Japanese, Korean, Thai and emoji with no replacement boxes, and the iOS 3D flip and swipe.
+**And** `README.md` is replaced with run, test and deploy notes.
+**And** at least 10 real pastes (PRD §9 question 1) have been checked against FR-2 to FR-4 before they are frozen.

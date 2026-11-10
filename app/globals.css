@@ -1,26 +1,198 @@
 @import "tailwindcss";
 
+/* Values come from docs/design-sheet.md (approved). Dark-first; light follows the system. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ff-bg: #0f0b1e;
+  --ff-surface: #1b1533;
+  --ff-surface-raised: #251d45;
+  --ff-text: #f5f3ff;
+  --ff-text-muted: #b9b2d9;
+  --ff-accent: #c4b5fd;
+  --ff-on-accent: #1a1033;
+  --ff-knew: #86efac;
+  --ff-missed: #fda4af;
+  --ff-border: #6d62a8;
+  --ff-focus: #fde047;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --ff-bg: #faf8ff;
+    --ff-surface: #ffffff;
+    --ff-surface-raised: #f0ebff;
+    --ff-text: #1a1033;
+    --ff-text-muted: #554b7a;
+    --ff-accent: #5b21b6;
+    --ff-on-accent: #ffffff;
+    --ff-knew: #166534;
+    --ff-missed: #9f1239;
+    --ff-border: #7c6fb0;
+    --ff-focus: #7c2d12;
+    color-scheme: light;
   }
 }
 
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-bg: var(--ff-bg);
+  --color-surface: var(--ff-surface);
+  --color-surface-raised: var(--ff-surface-raised);
+  --color-text: var(--ff-text);
+  --color-text-muted: var(--ff-text-muted);
+  --color-accent: var(--ff-accent);
+  --color-on-accent: var(--ff-on-accent);
+  --color-knew: var(--ff-knew);
+  --color-missed: var(--ff-missed);
+  --color-border: var(--ff-border);
+  --color-focus: var(--ff-focus);
+}
+
+@theme {
+  --text-display: 2rem;
+  --text-display--line-height: 1.15;
+  --text-card: 1.5rem;
+  --text-card--line-height: 1.3;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.4;
+
+  --spacing-gutter: 1rem;
+
+  --radius-card: 1.5rem;
+  --radius-control: 999px;
+  --radius-input: 1rem;
+
+  --duration-flip: 350ms;
+  --duration-screen: 200ms;
+  --duration-tap: 120ms;
+  --ease-pop: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+}
+
+/* NFR-3: a visible focus indicator on every control. */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Headings take focus programmatically on screen change (PAT-15); no ring for that. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+/* AD-10: card flip. Both faces sit in one grid cell; the inner box rotates. The hidden
+   face is aria-hidden and inert in the markup. Reduced motion swaps instantly (NFR-3). */
+:root {
+  --ff-perspective: 1200px;
+}
+
+.flip-scene {
+  perspective: var(--ff-perspective);
+}
+
+.flip-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform var(--duration-flip, 350ms) var(--ease-pop, ease-out);
+}
+
+.flip-inner[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  grid-area: 1 / 1;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-face[data-face="definition"] {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition: none;
+  }
+}
+
+/* AD-10: screen transition. */
+@keyframes screen-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.screen-enter {
+  animation: screen-enter var(--duration-screen, 200ms) var(--ease-pop, ease-out) both;
+}
+
+/* AD-10: confetti burst on the Result screen. Decorative only; stays inside its box. */
+.confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti > span {
+  position: absolute;
+  top: -1rem;
+  width: 0.5rem;
+  height: 1rem;
+  border-radius: 0.125rem;
+  opacity: 0;
+  animation: confetti-fall 1600ms var(--ease-pop, ease-out) 1 both;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(18rem) rotate(540deg);
+  }
+}
+
+.confetti > span:nth-child(3n + 1) { background: var(--color-accent); }
+.confetti > span:nth-child(3n + 2) { background: var(--color-knew); }
+.confetti > span:nth-child(3n) { background: var(--color-missed); }
+.confetti > span:nth-child(1) { left: 6%; animation-delay: 0ms; }
+.confetti > span:nth-child(2) { left: 14%; animation-delay: 120ms; }
+.confetti > span:nth-child(3) { left: 22%; animation-delay: 40ms; }
+.confetti > span:nth-child(4) { left: 30%; animation-delay: 200ms; }
+.confetti > span:nth-child(5) { left: 38%; animation-delay: 80ms; }
+.confetti > span:nth-child(6) { left: 46%; animation-delay: 160ms; }
+.confetti > span:nth-child(7) { left: 54%; animation-delay: 20ms; }
+.confetti > span:nth-child(8) { left: 62%; animation-delay: 140ms; }
+.confetti > span:nth-child(9) { left: 70%; animation-delay: 60ms; }
+.confetti > span:nth-child(10) { left: 78%; animation-delay: 180ms; }
+.confetti > span:nth-child(11) { left: 86%; animation-delay: 100ms; }
+.confetti > span:nth-child(12) { left: 94%; animation-delay: 220ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-enter {
+    animation: none;
+  }
+  .confetti {
+    display: none;
+  }
 }
