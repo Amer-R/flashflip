@@ -12,7 +12,7 @@ export type AcceptanceRow = {
 
 const MITOSIS: [string, string][] = [["mitosis", "cell division"]];
 const CELL: [string, string][] = [["細胞", "生命的基本單位"]];
-const FAMILY = "\u{1F468}‍\u{1F469}‍\u{1F467}";
+const FAMILY = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
 
 export const ACCEPTANCE_TABLE: AcceptanceRow[] = [
   { id: "P-01", inputs: ["mitosis - cell division"], cards: MITOSIS, skipped: [] },
@@ -72,10 +72,10 @@ export const ACCEPTANCE_TABLE: AcceptanceRow[] = [
     ],
     skipped: [],
   },
-  { id: "P-23", inputs: ["mitosis - cell division"], cards: MITOSIS, skipped: [] },
+  { id: "P-23", inputs: ["mitosis\u00A0-\u00A0cell division"], cards: MITOSIS, skipped: [] },
   {
     id: "P-24",
-    inputs: ["﻿mitosis - cell division", "​mitosis - cell division"],
+    inputs: ["\uFEFFmitosis - cell division", "\u200Bmitosis - cell division"],
     cards: MITOSIS,
     skipped: [],
   },

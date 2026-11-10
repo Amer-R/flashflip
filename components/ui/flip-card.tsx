@@ -7,6 +7,8 @@ const LINE_PX = 48;
 // FR-17: a Card taller than the screen scrolls inside its visible face. The face is not
 // focusable (it sits inside the button), so the arrow and page keys scroll it instead.
 function scrollVisibleFace(event: KeyboardEvent<HTMLButtonElement>) {
+  // Leave browser and OS shortcuts (Alt+Left, Ctrl+Down, Shift+PageDown) alone.
+  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
   const delta =
     event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : event.key === "PageDown" ? 2 : event.key === "PageUp" ? -2 : 0;
   if (delta === 0) return;

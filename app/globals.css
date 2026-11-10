@@ -207,6 +207,7 @@ body {
 /* FR-17: a Card taller than the screen scrolls inside its face (the page does not grow).
    The swipe surface keeps touch-action: pan-y, so a vertical drag scrolls this box. */
 .face-scroll {
+  max-height: 60vh; /* fallback for browsers without dvh */
   max-height: 60dvh;
   overflow-y: auto;
   overscroll-behavior: contain;

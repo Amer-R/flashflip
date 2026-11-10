@@ -111,6 +111,23 @@ describe("AD-9 long Skipped lists", () => {
     expect(items()).toHaveLength(130);
   });
 
+  it("FR-5 Show all moves keyboard focus to the first revealed line", () => {
+    render(<FlashFlipApp />);
+    makeCards(`ok - fine\n${skippedText(120)}`);
+    fireEvent.click(screen.getByRole("button", { name: "Show all 120" }));
+    expect(items()[SKIPPED_LINES_SHOWN]).toHaveFocus();
+  });
+
+  it("FR-5 a later refusal starts collapsed again even after Show all", () => {
+    render(<FlashFlipApp />);
+    makeCards(skippedText(130));
+    fireEvent.click(screen.getByRole("button", { name: "Show all 130" }));
+    expect(items()).toHaveLength(130);
+    fireEvent.click(screen.getByRole("button", { name: copy.makeCards }));
+    expect(items()).toHaveLength(SKIPPED_LINES_SHOWN);
+    expect(screen.getByRole("button", { name: "Show all 130" })).toBeInTheDocument();
+  });
+
   it("FR-5 the lines after the first 100 carry the content-visibility class", () => {
     render(<FlashFlipApp />);
     makeCards(`ok - fine\n${skippedText(120)}`);
@@ -148,7 +165,7 @@ describe("FR-17 text shown exactly", () => {
   });
 
   it("P-29 P-30 emoji sequences and combining marks come through character for character", () => {
-    const family = "\u{1F468}‍\u{1F469}‍\u{1F467}";
+    const family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
     studyFirstCard(`${family} - family\né - e with acute`);
     expect(screen.getByTestId("term").textContent).toBe(family);
     expect(screen.getByTestId("definition").textContent).toBe("family");

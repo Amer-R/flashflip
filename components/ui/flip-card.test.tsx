@@ -51,6 +51,16 @@ describe("FR-17 flip card scrolling", () => {
     expect(notPrevented).toBe(true);
   });
 
+  it("FR-17 modified arrow keys (Alt+Left style shortcuts) are left to the browser", () => {
+    render(<FlipCard card={card} flipped={false} onFlip={() => {}} />);
+    const scrollBy = stubLayout(visibleScroller(false), 900, 300);
+    const button = screen.getByRole("button");
+    for (const modifier of ["ctrlKey", "altKey", "metaKey", "shiftKey"] as const) {
+      expect(fireEvent.keyDown(button, { key: "ArrowDown", [modifier]: true })).toBe(true);
+    }
+    expect(scrollBy).not.toHaveBeenCalled();
+  });
+
   it("FR-8 a held Enter or Space does not flip again, but a held arrow keeps scrolling", () => {
     const onFlip = vi.fn();
     render(<FlipCard card={card} flipped={false} onFlip={onFlip} />);

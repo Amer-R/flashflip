@@ -10,7 +10,8 @@ const EM_DASH_RUN = /—{2,}/;
 // A dash run at the very start or end has whitespace on one side only, so the other side
 // is empty: a Skipped line with a missing Term or Definition (a Story 1.1 choice).
 const LEADING_DASH = new RegExp(String.raw`^\p{Dash}+${WHITESPACE}+`, "u");
-const TRAILING_DASH = new RegExp(String.raw`${WHITESPACE}+\p{Dash}+$`, "u");
+// One whitespace character is enough (the Term is trimmed afterwards); `WS+` before `$` is quadratic.
+const TRAILING_DASH = new RegExp(String.raw`${WHITESPACE}\p{Dash}+$`, "u");
 
 export function splitAtSeparator(line: string): [string, string] | null {
   for (const rule of [TAB, SPACED_DASH, COLON, EM_DASH_RUN]) {

@@ -2,12 +2,12 @@
 
 Run on a production build: `npm run build && npm run start`. Tick a box only for something you actually ran. **OPEN** means it has not been run yet.
 
-Last run here: 2026-11-10, desktop Chrome via browser automation, Story 1.3 build, `next start` on port 3123.
+Last run here: 2026-11-10, desktop Chrome via browser automation (1920 px viewport), Story 1.3 build, `next start` on port 3123. These ticks are evidence from one desktop browser, not release sign-off.
 
 ## NFR-1 Performance
 
 - [ ] **OPEN: needs a real device.** "Make cards" on 1,000 Lines within 500 ms on a mid-range phone (2022-era Android or iPhone SE class). Paste the 1,000-line sample from the README example repeated, tap "Make cards", record the time here: ______ ms.
-- [x] Desktop Chrome: "Make cards" with 3 Cards and 150 Skipped lines plus a 1,000-character Definition showed the Ready screen in under 300 ms (the measurement included a 300 ms wait, so it is an upper bound).
+- [x] Desktop Chrome: "Make cards" with 3 Cards and 150 Skipped lines plus a 1,000-character Definition showed the Ready screen. (The timing run included a fixed 300 ms wait, so it is not an NFR-1 figure; use the phone measurement above.)
 - [x] Node sanity test: 1,000 Lines parse well under 250 ms (`lib/core/parse-lines.test.ts`, "NFR-1").
 - [ ] **OPEN: needs a real device.** Study taps (flip, Mark) show their result within 200 ms.
 
@@ -29,11 +29,12 @@ Last run here: 2026-11-10, desktop Chrome via browser automation, Story 1.3 buil
 ## NFR-4 Devices and layout
 
 - [ ] **OPEN: needs a real device.** Safari on iOS and Chrome on Android at 320 px: no horizontal scroll with a 1,000-character Definition and with 150 Skipped lines; a tall Card scrolls inside its face by touch.
-- [x] Desktop Chrome (viewport 1920 px wide): no horizontal scroll with a 1,000-character Definition and 150 Skipped lines. The automation window could not be narrowed to 320 px, so 320 px is still OPEN.
+- [x] Desktop Chrome (viewport 1920 px wide): no horizontal scroll with a 1,000-character Definition and 150 Skipped lines. With the page width forced to 320 px by CSS no element overflowed, but that is only a proxy: the automation window could not be narrowed, so a real 320 px viewport is still OPEN.
 - [ ] **OPEN.** Current and previous major versions of desktop Chrome, Edge, Firefox and Safari.
 - [ ] **OPEN: needs a real device.** iOS 3D flip: both faces show correctly, no mirrored text, no flicker. If it misbehaves, fall back to a 2D flip.
 - [ ] **OPEN: needs a real device.** Swipe a flipped Card right ("Knew it") and left ("Missed it"); a plain tap still flips back. Confirm the direction mapping is what you want.
-- [ ] **OPEN.** Static-route check: `/` is prerendered (`○ (Static)` in the build output: yes, ticked at build time) and works with JavaScript disabled only as a skeleton (known limitation, no `<noscript>` message).
+- [x] The build output lists `/` as `○ (Static)` (prerendered).
+- [ ] **OPEN.** With JavaScript disabled the page shows only the skeleton (a known limitation, there is no `<noscript>` message). Decide whether that is acceptable.
 
 ## FR-17 Scripts (no replacement boxes)
 

@@ -88,7 +88,7 @@ describe("FR-2 Lines", () => {
   });
 
   it("FR-2 a Line of only zero-width characters is blank, not a Skipped line", () => {
-    const r = parseLines("a - b\n​﻿​\nc - d");
+    const r = parseLines("a - b\n\u200B\uFEFF\u200B\nc - d");
     expect(cardsOf(r)).toHaveLength(2);
     expect(skippedOf(r)).toEqual([]);
   });
@@ -119,7 +119,7 @@ describe("FR-5 Skipped lines", () => {
   });
 
   it("FR-5 the 80-character cut never splits an emoji or combining sequence", () => {
-    const family = "\u{1F468}‍\u{1F469}‍\u{1F467}";
+    const family = "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}";
     const emoji = skippedOf(parseLines("x".repeat(79) + family + "tail"))[0].text;
     expect(emoji).toBe("x".repeat(79) + family);
     const combining = skippedOf(parseLines("x".repeat(79) + "é" + "tail"))[0].text;
@@ -166,7 +166,7 @@ describe("FR-6 refusals and limits", () => {
 
 const PIECES = [
   "a", "term", "x y", "é", "\u{1F600}", "細胞", "خلية", "3.14", "A.", "well-known",
-  " - ", " -- ", " – ", " — ", ": ", "：", "——", "\t", ":", "-", " ", "​", "﻿", "  ",
+  " - ", " -- ", " – ", " — ", ": ", "：", "——", "\t", ":", "-", "\u00A0", "\u200B", "\uFEFF", "  ",
   "- ", "• ", "1. ", "2) ", "* ",
 ];
 const BREAKS = ["\n", "\r\n", "\r", "\u2028", "\u2029"];
@@ -188,7 +188,7 @@ describe("FR-5 invariant: Cards + Skipped lines + blank Lines = Lines", () => {
     const r = parseLines(text);
     const cards = cardsOf(r);
     expect(cards.length + skippedOf(r).length + blank).toBe(lines.length);
-    const edge = /^[\s​﻿]|[\s​﻿]$/;
+    const edge = /^[\s\u200B\uFEFF]|[\s\u200B\uFEFF]$/;
     for (const c of cards) {
       expect(edge.test(c.term)).toBe(false);
       expect(edge.test(c.definition)).toBe(false);
@@ -217,6 +217,24 @@ describe("NFR-1 speed", () => {
     const elapsed = performance.now() - start;
     expect(r.ok && r.value.cards).toHaveLength(1000);
     expect(elapsed).toBeLessThan(250);
+  });
+});
+
+describe("NFR-1 worst-case Lines (review finding: quadratic whitespace regexes)", () => {
+  const WORST_MS = 500;
+  const cases: [string, string][] = [
+    ["a long whitespace run inside a Line", "x" + " ".repeat(199_000) + "y"],
+    ["a long whitespace run before a Separator", "a" + " ".repeat(100_000) + "- b"],
+    ["a long run of tabs", "a" + "\t".repeat(100_000) + "b"],
+    ["a long run of zero-width spaces and spaces at both ends", "\u200B ".repeat(49_000) + "a - b" + " \u200B".repeat(49_000)],
+    ["a long dash run", "a " + "-".repeat(150_000) + " b"],
+    ["many short Lines of only whitespace", " \n".repeat(90_000)],
+  ];
+  it.each(cases)("NFR-1 %s parses quickly", (_name, text) => {
+    expect(text.length).toBeLessThanOrEqual(200_000);
+    const start = performance.now();
+    parseLines(text);
+    expect(performance.now() - start).toBeLessThan(WORST_MS);
   });
 });
 
