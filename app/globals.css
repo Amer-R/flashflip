@@ -196,3 +196,18 @@ body {
     display: none;
   }
 }
+
+/* AD-9: Skipped lines beyond the first 100 render only after "Show all N", and then skip
+   layout and paint work while off screen. Ignored where unsupported (rows render normally). */
+.skipped-rest {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3rem;
+}
+
+/* FR-17: a Card taller than the screen scrolls inside its face (the page does not grow).
+   The swipe surface keeps touch-action: pan-y, so a vertical drag scrolls this box. */
+.face-scroll {
+  max-height: 60dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

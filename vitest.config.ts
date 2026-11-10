@@ -21,6 +21,7 @@ export default defineConfig({
           name: "dom",
           environment: "jsdom",
           include: [
+            "app/**/*.test.{ts,tsx}",
             "components/**/*.test.{ts,tsx}",
             "lib/hooks/**/*.test.{ts,tsx}",
             "lib/storage/**/*.test.{ts,tsx}",

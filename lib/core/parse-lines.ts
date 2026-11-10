@@ -1,62 +1,64 @@
-import { SKIPPED_LINE_DISPLAY_LENGTH } from "@/lib/core/limits";
+import { MAX_CARDS, MAX_PASTE_CHARS, SKIPPED_LINE_DISPLAY_LENGTH } from "@/lib/core/limits";
+import { removeListMarker } from "@/lib/core/list-markers";
 import type { Result } from "@/lib/core/result";
+import { splitAtSeparator } from "@/lib/core/separators";
+import {
+  collapseWhitespace,
+  isBlank,
+  trimKeepingTabs,
+  trimText,
+  truncateGraphemes,
+} from "@/lib/core/text-units";
 import type { Card, SkippedLine } from "@/lib/core/types";
 
-// AD-1: bump with any change to FR-2 to FR-4 behavior (Story 1.3 bumps it).
-export const PARSER_VERSION = 1;
+// AD-1: bump with any change to FR-2 to FR-4 behavior. 2: Story 1.3 (full separator rules,
+// list markers, Unicode whitespace, whitespace collapse).
+export const PARSER_VERSION = 2;
 
 export type ParsedDeck = { cards: Card[]; skippedLines: SkippedLine[] };
-export type MakeCardsRefusal = { reason: "no-cards"; skippedLines: SkippedLine[] };
+// FR-6: why "Make cards" cannot make a Deck.
+export type MakeCardsRefusal =
+  | { reason: "too-much-text" }
+  | { reason: "too-many-cards" }
+  | { reason: "no-cards"; skippedLines: SkippedLine[] };
 
-// FR-2 (basic): CRLF, LF, CR. Unicode line separators and whitespace: Story 1.3.
-const LINE_BREAK = /\r\n|\n|\r/;
-// FR-4 (first pass), in precedence order: tab; spaced dash run; colon then whitespace.
-const TAB = /\t/;
-const SPACED_DASH = /\s[-–—]+\s/;
-const COLON = /:\s/;
-const LEADING_DASH = /^[-–—]+\s+/;
-const TRAILING_DASH = /\s+[-–—]+$/;
-
-function splitAtSeparator(line: string): [string, string] | null {
-  for (const rule of [TAB, SPACED_DASH, COLON]) {
-    const match = rule.exec(line);
-    if (match) {
-      return [line.slice(0, match.index), line.slice(match.index + match[0].length)];
-    }
-  }
-  // A dash run at the very start or end has whitespace on one side only: the other
-  // side is empty, so the Line is a Skipped line with a missing Term or Definition.
-  if (LEADING_DASH.test(line)) return ["", line.replace(LEADING_DASH, "")];
-  if (TRAILING_DASH.test(line)) return [line.replace(TRAILING_DASH, ""), ""];
-  return null;
-}
+// FR-2: CRLF is one break; LF, CR, U+2028 and U+2029 each end a Line.
+const LINE_BREAK = /\r\n|[\n\r\u2028\u2029]/;
 
 export function parseLines(pasteText: string): Result<ParsedDeck, MakeCardsRefusal> {
+  // AD-3: the length limit counts UTF-16 code units and is checked before any splitting.
+  if (pasteText.length > MAX_PASTE_CHARS) return { ok: false, reason: "too-much-text" };
+
   const cards: Card[] = [];
   const skippedLines: SkippedLine[] = [];
+  const lines = pasteText.split(LINE_BREAK);
 
-  pasteText.split(LINE_BREAK).forEach((raw, index) => {
-    // Trim everything but tabs: a leading or trailing tab is still a Separator (FR-4).
-    const line = raw.replace(/^[^\S\t]+|[^\S\t]+$/g, "");
-    if (line.trim() === "") return; // blank: no Card, not a Skipped line (FR-2)
+  for (let index = 0; index < lines.length; index++) {
+    // A tab at either end is kept for Separator detection; everything else is trimmed.
+    const line = trimKeepingTabs(lines[index]);
+    if (isBlank(line)) continue; // blank: no Card, not a Skipped line (FR-2)
 
-    const lineNumber = index + 1;
     const skip = (reason: SkippedLine["reason"]) =>
       skippedLines.push({
-        lineNumber,
-        text: line.slice(0, SKIPPED_LINE_DISPLAY_LENGTH),
+        lineNumber: index + 1,
+        text: truncateGraphemes(line, SKIPPED_LINE_DISPLAY_LENGTH),
         reason,
       });
 
-    const parts = splitAtSeparator(line);
-    if (!parts) return skip("no-separator");
-
-    const term = parts[0].trim();
-    const definition = parts[1].trim();
-    if (term === "") return skip("missing-term");
-    if (definition === "") return skip("missing-definition");
-    cards.push({ term, definition });
-  });
+    const parts = splitAtSeparator(removeListMarker(line));
+    if (!parts) {
+      skip("no-separator");
+      continue;
+    }
+    const term = collapseWhitespace(trimText(parts[0]));
+    const definition = collapseWhitespace(trimText(parts[1]));
+    if (term === "") skip("missing-term");
+    else if (definition === "") skip("missing-definition");
+    else {
+      cards.push({ term, definition });
+      if (cards.length > MAX_CARDS) return { ok: false, reason: "too-many-cards" };
+    }
+  }
 
   if (cards.length === 0) return { ok: false, reason: "no-cards", skippedLines };
   return { ok: true, value: { cards, skippedLines } };

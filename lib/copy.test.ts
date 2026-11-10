@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { copy } from "@/lib/copy";
+import { MAX_CARDS, MAX_PASTE_CHARS } from "@/lib/core/limits";
 
 // Guards the exact PRD wording (PAT-4).
 describe("copy", () => {
@@ -8,6 +9,14 @@ describe("copy", () => {
   });
   it("FR-6 refusal message", () => {
     expect(copy.noCardsMade).toBe("No cards could be made");
+  });
+  it("FR-6 the other two refusal messages use the PRD wording and the limits", () => {
+    expect(copy.tooMuchText).toBe("Too much text (max 200,000 characters)");
+    expect(copy.tooManyCards(MAX_CARDS)).toBe("Too many cards (max 1,000)");
+    expect(MAX_PASTE_CHARS.toLocaleString("en-US")).toBe("200,000");
+  });
+  it("AD-9 Show all N", () => {
+    expect(copy.showAllSkipped(150)).toBe("Show all 150");
   });
   it("FR-7 Ready screen labels and counts", () => {
     expect(copy.start).toBe("Start");

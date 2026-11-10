@@ -288,6 +288,14 @@ describe("FR-16 bad stored data", () => {
     expect(saved()).toMatchObject({ screen: "ready", marks: [], order: [] });
   });
 
+  it("FR-16 AD-1 a Story 1.2 state (parserVersion 1) with progress opens Ready, not Study", () => {
+    expect(PARSER_VERSION).toBeGreaterThan(1);
+    window.localStorage.setItem(SAVED_STATE_KEY, storedState({ parserVersion: 1 }));
+    render(<FlashFlipApp />);
+    expect(screen.getByRole("heading", { name: copy.readyHeading })).toBeInTheDocument();
+    expect(saved()).toMatchObject({ screen: "ready", marks: [], parserVersion: PARSER_VERSION });
+  });
+
   it("FR-16 storage that cannot be read opens an empty Paste screen without crashing", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new DOMException("blocked", "SecurityError");

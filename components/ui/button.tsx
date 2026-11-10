@@ -20,7 +20,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`min-h-11 min-w-11 rounded-control px-6 py-2 font-semibold transition-opacity duration-(--duration-tap)disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      className={`min-h-11 min-w-11 rounded-control px-6 py-2 font-semibold transition-opacity duration-(--duration-tap) disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
       {...rest}
     />
   );
