@@ -5,6 +5,8 @@ A small Next.js app built twice on purpose, to show the difference between *vibe
 
 **Live demo:** <https://flashflip-three.vercel.app> (the engineered version)
 
+> **Start with the complete app:** the [`engineered`](../../tree/engineered) branch is the finished, tested demo and the repository default. This `main` branch holds the vibe-coded version and the talk deck, to explore afterwards.
+
 This repository is the companion to the talk **"AI Can Build It"**. It is meant for students to read, run, compare and learn from.
 
 ## The idea
@@ -25,9 +27,9 @@ Reading the two side by side is the point of the exercise: the vibe version look
 
 | Branch | What it is | Start here if you want to... |
 |---|---|---|
-| `main` (this one) | The vibe-coded app plus the interactive talk deck | see the starting point and open the deck |
+| `main` (this one) | The vibe-coded app plus the interactive talk deck | open the deck, or see the vibe version |
 | [`show-vibe`](../../tree/show-vibe) | The vibe-coded app as first generated | study the "one prompt" result |
-| [`engineered`](../../tree/engineered) | The finished, tested app with planning docs | study the engineered result |
+| [`engineered`](../../tree/engineered) (default) | The finished, tested app with planning docs | **start here** and study the engineered result |
 | [`demo-done`](../../tree/demo-done) | Working branch the engineered version was merged from | follow the story-by-story history |
 
 To compare them: `git diff main..engineered --stat`, or use GitHub's compare view at `/compare/main...engineered`.
