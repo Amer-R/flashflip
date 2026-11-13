@@ -36,7 +36,7 @@ To compare them: `git diff main..engineered --stat`, or use GitHub's compare vie
 
 ## The interactive talk deck
 
-`AI Can Build It.html` is a self-contained slide deck. Download it and open it in a browser, no server needed. It needs an internet connection for the QR-code library.
+`deck/index.html` is a self-contained slide deck. Open it in a browser, no server needed. It needs an internet connection for the QR-code library.
 
 ## Run it yourself
 
