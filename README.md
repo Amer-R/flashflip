@@ -2,6 +2,10 @@
 
 Paste your notes, get flashcards, flip through them and see your score. Everything stays in your browser: the app makes no network requests after it loads, sets no cookies and has no accounts.
 
+**Live demo:** <https://flashflip-three.vercel.app>
+
+This repository is the companion to the talk **"AI Can Build It"**. This branch (`engineered`) is the **complete, finished app**: planned with the [BMAD Method](https://docs.bmad-method.org/), built story by story and tested. After you have explored it, compare it with the [vibe-coded version](#compare-with-the-vibe-coded-version).
+
 ## How to paste
 
 One card per line, with a separator between the term and the definition:
@@ -44,3 +48,47 @@ FlashFlip is a static Next.js site: no functions, no environment variables and n
 - `docs/manual-checklist.md`: checks that need a production build or a real device.
 - `docs/real-pastes.md`: real pastes checked against the parser rules.
 - `_bmad-output/`: planning artifacts and story records.
+
+## What to look at in this branch
+
+- `_bmad-output/planning-artifacts/`: the brief, PRD, architecture and epics that came **before** any code.
+- `_bmad-output/implementation-artifacts/`: one record per story, showing how each was built and checked.
+- `lib/core/`: the paste parser, scoring, shuffle and saved-state logic, with a test file next to each module.
+- `docs/`: design tokens, a manual test checklist and real pastes the parser was checked against.
+- `.agents/` and `_bmad/`: the BMAD skills and config the AI team ran on. You do not need to edit these, they are there so you can see how the "team" was set up.
+
+## Compare with the vibe-coded version
+
+The same product was first built with one prompt and no review. Seeing both is the point of the exercise.
+
+| | Vibe-coded ([`show-vibe`](../../tree/show-vibe)) | Engineered (this branch) |
+|---|---|---|
+| How | One prompt, output not reviewed | Brief, PRD, architecture, stories, then tests |
+| Paste parser | A short list of separator patterns, no input limits | Documented rules, input limits, every unreadable line listed with its reason |
+| Tests | None | Vitest for the parser, reducer, storage and screens |
+| Privacy and security | No explicit policy | No network calls after load, strict CSP, no cookies, no accounts |
+
+| Branch | What it is |
+|---|---|
+| `engineered` (default) | The finished, tested app with planning docs |
+| [`show-vibe`](../../tree/show-vibe) | The vibe-coded app as first generated |
+| [`main`](../../tree/main) | The vibe-coded app plus the interactive talk deck (`AI Can Build It.html`) |
+| [`demo-done`](../../tree/demo-done) | Working branch this version was merged from |
+
+Compare them with `git diff show-vibe..engineered --stat` or GitHub's compare view.
+
+## Exercises
+
+1. Paste messy notes (mixed bullets, missing separators, very long lines) into both versions. What differs, and why?
+2. Read the PRD, then find where in the code each requirement is met.
+3. Add a feature to the vibe version with one prompt, then add the same feature to the engineered version through a story. Compare the effort and the result.
+
+## Contributing and feedback
+
+This is a teaching repo. Questions and suggestions are welcome through [issues](../../issues).
+
+## License
+
+[MIT](LICENSE). Use it, change it, teach with it.
+
+Made with ❤ by [Amer Radwan](https://www.linkedin.com/in/amerradwan/).
