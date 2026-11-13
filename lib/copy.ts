@@ -7,6 +7,12 @@ export const copy = {
   pasteLabel: "Paste your notes here",
   makeCards: "Make cards", // FR-1
   noCardsMade: "No cards could be made", // FR-6
+  tooMuchText: "Too much text (max 200,000 characters)", // FR-6
+  tooManyCards: (max: number) => `Too many cards (max ${max.toLocaleString("en-US")})`, // FR-6
+  showAllSkipped: (count: number) => `Show all ${count}`, // AD-9 (text the PRD does not specify)
+  errorHeading: "Something went wrong", // PAT-6 (text the PRD does not specify)
+  errorBody: "FlashFlip hit an unexpected problem. Starting over clears the saved deck on this device.",
+  startOver: "Start over", // PAT-6
   readyHeading: "Ready to study",
   start: "Start", // FR-7
   editText: "Edit text", // FR-7

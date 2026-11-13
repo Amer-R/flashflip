@@ -22,3 +22,14 @@
 - Confetti: reduced-motion comment says "still accent" but the CSS hides the burst; fixed fall height can clip on short Result screens.
 - Weak test assertions: substring `toHaveTextContent("t1")`, restore focus test does not assert the Card is unfocused, `cardsMade(1, 0)` pluralisation locked in.
 - vitest `<dialog>` stub does not model focus trap or initial focus; verify in a real browser.
+
+## Deferred from: code review of 1-3-bulletproof-paste (2026-11-10)
+
+- Up to about 100,000 one-character Skipped lines can all render after "Show all N"; needs windowing and a product call (components/ui/skipped-lines.tsx).
+- No `app/global-error.tsx`: errors in the root layout bypass "Start over".
+- Lines of only U+200E, U+200F, U+2060 or U+200C are not blank under FR-2's whitespace set and show as empty Skipped lines (PRD question for the real-paste check).
+- `\p{Dash}` also matches wave dashes and the fullwidth hyphen as Separators (PRD question).
+- An inner U+200B becomes a space; no test, possible Thai impact (real-paste check).
+- Near-limit pastes may exceed the localStorage quota; not exercised.
+- The 60dvh scroll height and the 48 px key step are literals, not tokens or cited constants.
+

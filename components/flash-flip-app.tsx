@@ -8,8 +8,9 @@ import { LiveRegion } from "@/components/ui/live-region";
 import { SaveFailedNotice } from "@/components/ui/notices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { copy } from "@/lib/copy";
-import { PREVIEW_CARD_COUNT } from "@/lib/core/limits";
-import { parseLines } from "@/lib/core/parse-lines";
+import { assertNever } from "@/lib/core/assert-never";
+import { MAX_CARDS, PREVIEW_CARD_COUNT } from "@/lib/core/limits";
+import { parseLines, type MakeCardsRefusal } from "@/lib/core/parse-lines";
 import { parseSavedState } from "@/lib/core/saved-state";
 import { currentCard, deckOf, position, score } from "@/lib/core/selectors";
 import { initialState, reducer, type SessionState } from "@/lib/core/session";
@@ -41,12 +42,28 @@ export function FlashFlipApp() {
   return <Session initialSession={restored} />;
 }
 
+// FR-6: the Paste screen shows one message; only "no cards" also lists Skipped lines.
+type Refusal = { message: string; skippedLines: SkippedLine[] };
+
+function refusalOf(result: MakeCardsRefusal): Refusal {
+  switch (result.reason) {
+    case "too-much-text":
+      return { message: copy.tooMuchText, skippedLines: [] };
+    case "too-many-cards":
+      return { message: copy.tooManyCards(MAX_CARDS), skippedLines: [] };
+    case "no-cards":
+      return { message: copy.noCardsMade, skippedLines: result.skippedLines };
+    default:
+      return assertNever(result);
+  }
+}
+
 // Owns the reducer, parses only on "Make cards" (PAT-12), saves after state changes and
 // hands derived data and callbacks to the screens as props.
 function Session({ initialSession }: { initialSession: SessionState }) {
   const [state, dispatch] = useReducer(reducer, initialSession);
   const { saveFailed } = useSavedState(state);
-  const [refusal, setRefusal] = useState<SkippedLine[] | null>(null);
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   // PAT-15: one live region. `seq` makes identical consecutive messages announce again.
   const [announcement, setAnnouncement] = useState({ message: "", seq: 0 });
   // Session-only UI flags, not part of the reducer state or the Saved state (PAT-10):
@@ -70,9 +87,10 @@ function Session({ initialSession }: { initialSession: SessionState }) {
       setRefocusCard(false);
       dispatch({ type: "deck-made", pasteText: text });
     } else {
-      // FR-6: stay on Paste, keep the text and any existing Deck.
-      setRefusal(result.skippedLines);
-      announce(copy.noCardsMade);
+      // FR-6: stay on Paste, keep the text and any existing Deck (no deck-made, no save).
+      const next = refusalOf(result);
+      setRefusal(next);
+      announce(next.message);
     }
   }
 
@@ -107,7 +125,7 @@ function Session({ initialSession }: { initialSession: SessionState }) {
       <PasteScreen
         key={state.pasteText}
         initialText={state.pasteText}
-        refusedSkippedLines={refusal}
+        refusal={refusal}
         onMakeCards={makeCards}
         onEdit={() => setRefusal(null)}
         onBack={deck ? back : undefined}
