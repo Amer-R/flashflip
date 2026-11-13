@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlashFlip
 
-## Getting Started
+**Paste your notes, get flashcards, flip through them and see your score.**
+A small Next.js app built twice on purpose, to show the difference between *vibe coding* and *AI engineering*.
 
-First, run the development server:
+**Live demo:** <https://flashflip-three.vercel.app> (the engineered version)
+
+This repository is the companion to the talk **"AI Can Build It"**. It is meant for students to read, run, compare and learn from.
+
+## The idea
+
+The same product, FlashFlip, was built two ways with AI:
+
+| | Vibe-coded | Engineered |
+|---|---|---|
+| How | One prompt, output not reviewed | Brief, PRD, architecture, stories, then tests, with the [BMAD Method](https://docs.bmad-method.org/) |
+| Paste parser | A short list of separator patterns, no input limits | Documented rules, input limits, and every unreadable line listed with its line number and reason |
+| Tests | None | Vitest for the parser, reducer, storage and screens |
+| Privacy and security | No explicit policy | No network calls after load, strict CSP, no cookies, no accounts |
+| Branch | [`show-vibe`](../../tree/show-vibe) | [`engineered`](../../tree/engineered) (final polish on [`demo-done`](../../tree/demo-done)) |
+
+Reading the two side by side is the point of the exercise: the vibe version looks fine in a demo, and the engineered version is the one you could safely put in front of users.
+
+## Branches
+
+| Branch | What it is | Start here if you want to... |
+|---|---|---|
+| `main` (this one) | The vibe-coded app plus the interactive talk deck | see the starting point and open the deck |
+| [`show-vibe`](../../tree/show-vibe) | The vibe-coded app as first generated | study the "one prompt" result |
+| [`engineered`](../../tree/engineered) | The finished, tested app with planning docs | study the engineered result |
+| [`demo-done`](../../tree/demo-done) | Working branch the engineered version was merged from | follow the story-by-story history |
+
+To compare them: `git diff main..engineered --stat`, or use GitHub's compare view at `/compare/main...engineered`.
+
+## The interactive talk deck
+
+`AI Can Build It.html` is a self-contained slide deck. Download it and open it in a browser, no server needed. It needs an internet connection for the QR-code library.
+
+## Run it yourself
+
+You need [Node.js](https://nodejs.org/) 22.12 or newer.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Amer-R/flashflip.git
+cd flashflip
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To try the engineered version, switch branch first and use its extra scripts:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+git switch engineered
+npm install
+npm run dev
+npm run test       # Vitest
+npm run lint       # ESLint
+npm run typecheck  # tsc --noEmit
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Paste format (engineered version): one card per line, with a tab, ` - `, or `: ` between the term and the definition.
 
-## Learn More
+```
+mitosis - cell division
+osmosis: water moving across a membrane
+```
 
-To learn more about Next.js, take a look at the following resources:
+## What to look at in the engineered branch
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `_bmad-output/planning-artifacts/`: the brief, PRD, architecture and epics that came **before** any code.
+- `_bmad-output/implementation-artifacts/`: one record per story, showing how each was built and checked.
+- `lib/core/`: the paste parser, scoring, shuffle and saved-state logic, with a test file next to each module.
+- `docs/`: design tokens, a manual test checklist and real pastes the parser was checked against.
+- `.agents/` and `_bmad/`: the BMAD skills and config the AI team ran on. You do not need to edit these, they are there so you can see how the "team" was set up.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Exercises
 
-## Deploy on Vercel
+1. Paste messy notes (mixed bullets, missing separators, very long lines) into both versions. What differs, and why?
+2. Read the PRD, then find where in the code each requirement is met.
+3. Add a feature to the vibe version with one prompt, then add the same feature to the engineered version through a story. Compare the effort and the result.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing and feedback
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This is a teaching repo. Questions and suggestions are welcome through [issues](../../issues).
+
+## License
+
+[MIT](LICENSE). Use it, change it, teach with it.
+
+Made with ❤ by [Amer Radwan](https://www.linkedin.com/in/amerradwan/).
