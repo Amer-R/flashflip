@@ -72,10 +72,14 @@ The same product was first built with one prompt and no review. Seeing both is t
 |---|---|
 | `engineered` (default) | The finished, tested app with planning docs |
 | [`show-vibe`](../../tree/show-vibe) | The vibe-coded app as first generated |
-| [`main`](../../tree/main) | The vibe-coded app plus the interactive talk deck (`AI Can Build It.html`) |
+| [`main`](../../tree/main) | The vibe-coded app as first generated, plus a copy of the talk deck |
 | [`demo-done`](../../tree/demo-done) | Working branch this version was merged from |
 
 Compare them with `git diff show-vibe..engineered --stat` or GitHub's compare view.
+
+## The interactive talk deck
+
+The slide deck for the talk lives in [`deck/`](deck/) (`deck/index.html`). Open it in a browser, no server needed.
 
 ## Exercises
 
