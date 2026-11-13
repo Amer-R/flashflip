@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI Can Build It. Can You Trust It?</title>
+<meta name="description" content="Interactive 20-minute demo: Vibe Coding vs. Engineered AI-SDLC, built around FlashFlip.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#05050A; --sheet:#0D0E17; --sheet2:#141626; --ink:#F3F4FF; --muted:#A3A7CC; --rule:#262A3F;
+  --eng:#22D3EE; --eng-soft:#0E2A36; --vibe:#FF6B4A; --vibe-soft:#2A140F; --lime:#C8FF3D; --lime-ink:#0A0F02;
+  --good:#4ADE80; --bad:#FF6B6B; --warn:#FFB454; --code:#04040A; --code-ink:#D9E6FF;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  --ease-io:cubic-bezier(0.77,0,0.175,1);
+  --glow:0 0 26px rgba(34,211,238,.38);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 clamp(15px,1.05vw + 10px,19px)/1.55 var(--f-body);overflow:hidden;
+  background-image:radial-gradient(900px 520px at 12% -10%,rgba(34,211,238,.17),transparent 60%),radial-gradient(700px 500px at 100% 8%,rgba(200,255,61,.09),transparent 60%),radial-gradient(640px 420px at 50% 112%,rgba(255,107,74,.13),transparent 60%),linear-gradient(rgba(34,211,238,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.06) 1px,transparent 1px);
+  background-size:auto,auto,auto,34px 34px,34px 34px;background-attachment:fixed}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px)}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.08;text-wrap:balance;text-transform:uppercase;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,6.2vw,4.6rem);font-weight:800}
+h2{font-size:clamp(1.35rem,3.2vw,2.3rem);font-weight:800}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+code{background:rgba(34,211,238,.1);color:#9BEFFB;border:1px solid rgba(34,211,238,.18);padding:1px 6px;border-radius:4px;overflow-wrap:anywhere}
+:focus-visible{outline:3px solid var(--eng);outline-offset:3px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.vibe{color:var(--vibe)} .eng{color:var(--eng)} .lime{color:var(--lime)}
+
+/* ---------- app shell ---------- */
+.app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;position:relative;z-index:1}
+.top{display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-left)) 8px;background:rgba(13,14,23,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(34,211,238,.22);flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:800;font-size:.9rem;text-transform:uppercase;color:var(--eng);text-shadow:var(--glow);white-space:nowrap}
+.seq{display:flex;gap:4px;flex:1;min-width:200px;overflow:hidden}
+.seq span{font:600 .62rem/1 var(--f-mono);letter-spacing:.08em;padding:5px 7px;border-radius:4px;border:1px solid var(--rule);color:var(--muted);white-space:nowrap;transition:color .2s,border-color .2s,background-color .2s}
+.seq span.on{color:var(--lime-ink);background:var(--lime);border-color:var(--lime);box-shadow:0 0 14px rgba(200,255,61,.4)}
+.seq span.done{color:var(--eng);border-color:rgba(34,211,238,.4)}
+.hud{display:flex;align-items:center;gap:10px}
+.xp{font:700 .85rem var(--f-mono);color:var(--lime);font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock{font:600 1.15rem var(--f-mono);font-variant-numeric:tabular-nums;color:var(--eng);text-shadow:var(--glow);min-width:4.2ch;text-align:right}
+.clock.warn{color:var(--vibe);text-shadow:0 0 18px rgba(255,107,74,.5)}
+.btn{border:1px solid var(--rule);background:var(--sheet2);color:var(--ink);border-radius:999px;padding:8px 16px;font-weight:700;font-size:.85rem;transition:transform .16s var(--ease-out),border-color .2s,background-color .2s}
+.btn:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--eng)}}
+.btn.go{background:linear-gradient(90deg,#22D3EE,#67E8F9);color:#04131A;border-color:transparent;box-shadow:var(--glow)}
+.btn.hot{background:linear-gradient(90deg,#FF6B4A,#FF9A6B);color:#220A04;border-color:transparent;box-shadow:0 0 24px rgba(255,107,74,.4)}
+.btn.lime{background:var(--lime);color:var(--lime-ink);border-color:transparent;box-shadow:0 0 20px rgba(200,255,61,.35)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.prog{height:3px;background:var(--rule)}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--eng),var(--lime));box-shadow:var(--glow);transition:width .5s var(--ease-out)}
+
+.viewport{position:relative;overflow:hidden auto;scroll-behavior:smooth}
+.stage{display:none;max-width:1120px;margin:0 auto;padding:clamp(16px,3.2vw,40px) max(16px,env(safe-area-inset-left)) 40px;gap:clamp(14px,2vw,24px);align-content:start}
+.stage.on{display:grid}
+.stage.on .rv{animation:rise .55s var(--ease-out) both;animation-delay:calc(var(--i,0)*60ms)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.eyebrow{font:600 .75rem var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
+.eyebrow::before{content:"// ";color:var(--eng)}
+.lead{color:var(--muted);max-width:62ch;font-size:1.05em}
+.say{font-size:1.08em;max-width:60ch}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.04),transparent),var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:clamp(14px,2.2vw,24px);position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 50px -34px rgba(34,211,238,.4)}
+.card::before{content:"";position:absolute;top:-1px;left:24px;right:24px;height:1px;background:linear-gradient(90deg,transparent,var(--eng),transparent);opacity:.7}
+.chip{font:600 .66rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;border:1px solid var(--rule);color:var(--muted);white-space:nowrap;display:inline-block}
+.chip.live{background:var(--lime);color:var(--lime-ink);border-color:var(--lime);box-shadow:0 0 14px rgba(200,255,61,.45)}
+.chip.v{background:var(--vibe-soft);color:var(--vibe);border-color:rgba(255,107,74,.4)}
+.chip.e{background:var(--eng-soft);color:var(--eng);border-color:rgba(34,211,238,.4)}
+.chip.g{background:#0F2A1A;color:var(--good);border-color:rgba(74,222,128,.4)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,2vw,22px)}
+.cols.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cols>*{min-width:0}
+
+/* bottom nav */
+.nav{display:flex;flex-wrap:wrap;align-items:center;gap:12px;row-gap:6px;padding:10px max(16px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-bottom));background:rgba(13,14,23,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(34,211,238,.2)}
+.dots{display:flex;gap:8px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--rule);background:var(--sheet);font:700 .72rem var(--f-mono);color:var(--muted);transition:transform .16s var(--ease-out),border-color .2s,background-color .2s}
+.dots button.on{background:var(--eng);border-color:var(--eng);color:#04131A;box-shadow:var(--glow)}
+.dots button.done{border-color:var(--lime);color:var(--lime)}
+.dots button:active{transform:scale(.93)}
+.credit{flex:0 0 100%;display:flex;justify-content:center;align-items:center;gap:4px 12px;flex-wrap:wrap;text-align:center;font:600 .68rem/1.2 var(--f-mono);letter-spacing:.06em;color:var(--muted)}
+.credit b{color:var(--ink);font-weight:700}
+.credit .heart{color:var(--vibe)}
+.credit a{color:var(--eng);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s ease}
+@media (hover:hover) and (pointer:fine){.credit a:hover{border-bottom-color:var(--eng)}}
+
+/* notes */
+.notes{position:fixed;left:0;right:0;bottom:84px;z-index:20;transform:translateY(calc(100% + 80px));visibility:hidden;transition:transform .3s var(--ease-out),visibility 0s .3s;background:rgba(10,11,19,.96);border-top:2px solid var(--lime);padding:14px max(16px,env(safe-area-inset-left));backdrop-filter:blur(12px)}
+.notes.on{transform:none;visibility:visible;transition:transform .3s var(--ease-out),visibility 0s}
+.notes .in{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:.88rem}
+.notes b{display:block;font:600 .66rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--lime);margin-bottom:3px}
+.notes .planb b{color:var(--vibe)}
+
+/* ---------- TITLE ---------- */
+.title{min-height:calc(100dvh - 160px);align-content:center;text-align:left}
+.title h1 .l{display:inline-block;opacity:0;transform:translateY(.5em);animation:rise .7s var(--ease-out) forwards;animation-delay:calc(var(--k)*28ms + 150ms)}
+.grad{color:var(--eng);text-shadow:0 0 34px rgba(34,211,238,.5)}
+.steplbl{display:none;font:700 .8rem var(--f-mono);color:var(--muted);flex:1;text-align:center}
+.sub{font:600 clamp(.9rem,1.6vw,1.25rem) var(--f-mono);letter-spacing:.04em}
+.race{width:100%;max-width:820px;margin-top:8px}
+.race svg{width:100%;height:auto;overflow:visible}
+.race .tr{fill:none;stroke:var(--rule);stroke-width:2}
+.race .rv1,.race .rv2{fill:none;stroke-width:4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.stage.on .race .rv1{animation:draw 1.3s var(--ease-out) 1.1s forwards}
+.stage.on .race .rv2{animation:draw 4.2s var(--ease-io) 1.1s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.race text{font:600 11px var(--f-mono);fill:var(--muted);letter-spacing:.06em}
+.race .pop{opacity:0}
+.stage.on .race .pop{animation:fade .4s ease-out forwards;animation-delay:var(--d)}
+@keyframes fade{to{opacity:1}}
+.race .q{font:800 34px var(--f-display);fill:var(--lime)}
+.cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+/* ---------- HOOK ---------- */
+.hook{grid-template-columns:1.15fr 1fr;align-items:start}
+.hook>*{min-width:0}
+.big60{font:800 clamp(2.6rem,9vw,6rem)/1 var(--f-display);color:var(--vibe);text-shadow:0 0 36px rgba(255,107,74,.45);font-variant-numeric:tabular-nums}
+.phone{width:min(100%,300px);margin:0 auto;background:#000;border:2px solid #2b2f48;border-radius:34px;padding:14px;box-shadow:0 0 0 6px #0b0c14,0 30px 70px -24px rgba(255,107,74,.45)}
+.phone .scr{background:#fafafa;color:#18181b;border-radius:22px;padding:16px;min-height:340px;display:grid;gap:10px;align-content:start;font-family:system-ui,sans-serif}
+.phone h4{margin:0;font-size:1.1rem}
+.phone .ta{background:#fff;border:1px solid #d4d4d8;border-radius:10px;padding:8px;font:.7rem/1.5 var(--f-mono);color:#27272a;min-height:84px;white-space:pre-wrap}
+.phone .st{background:#18181b;color:#fff;border-radius:99px;text-align:center;padding:9px;font-size:.8rem;font-weight:600}
+.fc{perspective:700px;height:120px;border:0;background:none;padding:0;width:100%}
+.fc div{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s var(--ease-io)}
+.fc.f div{transform:rotateY(180deg)}
+.fc span{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:10px;border:1px solid #e4e4e7;border-radius:14px;background:#fff;backface-visibility:hidden;font-weight:700;font-size:.9rem}
+.fc span+span{transform:rotateY(180deg);background:#f4f4f5;font-weight:500;font-size:.8rem}
+.qrbox{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.qr{background:#fff;padding:10px;border-radius:10px;width:148px;height:148px;display:grid;place-items:center;color:#222;font:.7rem var(--f-mono);text-align:center}
+.qr img,.qr canvas{width:100%!important;height:auto!important}
+input.txt{width:100%;background:var(--code);border:1px solid var(--rule);color:var(--ink);border-radius:8px;padding:9px 12px;font:.82rem var(--f-mono)}
+.poll{display:grid;gap:8px}
+.poll .row{display:grid;grid-template-columns:150px 1fr 36px;gap:10px;align-items:center}
+.poll button.opt{display:grid;grid-template-columns:150px 1fr 36px;gap:10px;align-items:center;background:none;border:0;text-align:left;padding:4px 0;width:100%}
+.poll .lab{font-weight:600;font-size:.88rem}
+.poll .tr{height:14px;border-radius:99px;background:var(--rule);overflow:hidden}
+.poll .tr i{display:block;height:100%;width:0;transform-origin:left;border-radius:99px;transition:width .5s var(--ease-out);background:linear-gradient(90deg,var(--eng),var(--lime))}
+.poll .n{font:700 .85rem var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- BREAK ---------- */
+.breakhead{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.ring{position:relative;width:84px;height:84px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:7}
+.ring .bg{stroke:var(--rule)} .ring .fg{stroke:var(--vibe);stroke-linecap:round;stroke-dasharray:264;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font:700 1.1rem var(--f-mono);font-variant-numeric:tabular-nums}
+.chal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;list-style:none;margin:0;padding:0}
+.flip{perspective:1100px;min-height:236px}
+.flip>.in{position:relative;height:100%;min-height:236px;transform-style:preserve-3d;transition:transform .6s var(--ease-io)}
+.flip.f>.in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;padding:16px;display:grid;gap:8px;align-content:start;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1.5px dashed var(--rule);background:var(--sheet);overflow:auto}
+.face.back{transform:rotateY(180deg);border-style:solid}
+.face.back.real{border-color:var(--vibe);background:linear-gradient(180deg,var(--vibe-soft),var(--sheet))}
+.face.back.held{border-color:var(--good);background:linear-gradient(180deg,#0F2A1A,var(--sheet))}
+.face.back.maybe{border-color:var(--warn);background:linear-gradient(180deg,#2E2210,var(--sheet))}
+.face .t{font-weight:800;font-size:1.02em}
+.face .try{font-size:.86rem;color:var(--muted)}
+.face .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.lv{font:700 .62rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.lv.e1{color:var(--good)} .lv.e2{color:var(--warn)} .lv.e3{color:var(--bad)}
+.verdict{font:700 .7rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.verdict.real{color:var(--vibe)} .verdict.held{color:var(--good)} .verdict.maybe{color:var(--warn)}
+.fixl{font:600 .66rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--eng)}
+.tst{font:.76rem var(--f-mono);color:var(--good)}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{display:flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:99px;padding:5px 12px;font-size:.8rem;font-weight:700;color:var(--muted);transition:all .3s var(--ease-out)}
+.badge.got{color:var(--lime-ink);background:var(--lime);border-color:var(--lime);box-shadow:0 0 16px rgba(200,255,61,.4)}
+.toast{position:fixed;top:78px;right:16px;z-index:40;display:grid;gap:8px}
+.toast div{background:var(--lime);color:var(--lime-ink);font-weight:800;padding:10px 16px;border-radius:10px;box-shadow:0 0 28px rgba(200,255,61,.5);animation:toast .4s var(--ease-out) both}
+.toast div.out{opacity:0;transform:translateX(20px);transition:opacity .25s ease-out,transform .25s ease-out}
+@keyframes toast{from{opacity:0;transform:translateX(24px) scale(.96)}to{opacity:1;transform:none}}
+
+/* ---------- REVEAL ---------- */
+.term{background:var(--code);border:1px solid rgba(34,211,238,.22);border-radius:12px;padding:14px 16px;font:.88rem/1.7 var(--f-mono);color:var(--code-ink);box-shadow:inset 0 0 40px rgba(34,211,238,.05);overflow-wrap:anywhere}
+.term .wh{display:block;font:600 .64rem var(--f-mono);letter-spacing:.12em;color:#8FA7C4;text-transform:uppercase;margin-bottom:6px}
+.term .cur{display:inline-block;width:.55em;height:1.1em;background:var(--vibe);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.flowrow{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.node{padding:10px 14px;border-radius:10px;border:1.5px solid var(--rule);background:var(--sheet);font:700 .78rem var(--f-mono);letter-spacing:.04em;text-transform:uppercase;opacity:.25;transform:scale(.96);transition:opacity .35s var(--ease-out),transform .35s var(--ease-out),border-color .35s,box-shadow .35s;text-align:center}
+.node.on{opacity:1;transform:none}
+.vf .node.on{border-color:var(--vibe);box-shadow:0 0 18px rgba(255,107,74,.3);color:var(--vibe)}
+.ef .node.on{border-color:var(--eng);box-shadow:var(--glow);color:var(--eng)}
+.ef .node{cursor:pointer}
+.ef .node.sel{background:var(--eng-soft);outline:2px solid var(--lime)}
+.arrow{width:26px;height:2px;background:var(--rule);position:relative;transition:background-color .3s}
+.arrow.on{background:linear-gradient(90deg,var(--eng),var(--lime))}
+.vf .arrow.on{background:var(--vibe)}
+.stagebox{display:grid;gap:6px;font-size:.95rem}
+.chart{width:100%;height:auto}
+.chart .ax{stroke:var(--rule);stroke-width:1.5}
+.chart text{font:600 11px var(--f-mono);fill:var(--muted)}
+.chart .ln{fill:none;stroke-width:4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.chart.go .ln{animation:draw 2.2s var(--ease-io) forwards}
+.chart.go .ln.b{animation-delay:.25s}
+.chart .pt{opacity:0}.chart.go .pt{animation:fade .4s 1.9s forwards}
+.vote{display:grid;gap:10px}
+.vote .q{font-weight:700}
+.vrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vbtn{position:relative;overflow:hidden;border-radius:10px;border:1.5px solid var(--rule);background:var(--sheet);padding:12px;text-align:left;font-weight:700;transition:transform .16s var(--ease-out),border-color .2s}
+.vbtn:active{transform:scale(.97)}
+.vbtn .bar{position:absolute;inset:0 auto 0 0;width:0;background:rgba(34,211,238,.16);transition:width .5s var(--ease-out);z-index:0}
+.vbtn.v .bar{background:rgba(255,107,74,.2)}
+.vbtn>span{position:relative;z-index:1;display:flex;justify-content:space-between;gap:8px}
+
+/* ---------- TEAM ---------- */
+.team{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;list-style:none;margin:0;padding:0;position:relative}
+.team button{width:100%;height:100%;display:grid;gap:4px;justify-items:center;text-align:center;padding:14px 6px;border-radius:12px;border:1.5px dashed var(--rule);background:var(--sheet);transition:transform .2s var(--ease-out),border-color .2s,background-color .2s}
+.team button .av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:1.4rem;background:var(--sheet2);border:1.5px solid var(--rule);transition:box-shadow .25s,border-color .25s}
+.team button[aria-selected="true"]{border-style:solid;border-color:var(--eng);background:var(--eng-soft);box-shadow:var(--glow)}
+.team button[aria-selected="true"] .av{border-color:var(--lime);box-shadow:0 0 18px rgba(200,255,61,.45)}
+.team .nm{font:800 .78rem var(--f-display);text-transform:uppercase}
+.team .rl{font-size:.72rem;color:var(--muted)}
+.team .num{font:600 .62rem var(--f-mono);color:var(--eng)}
+@media (hover:hover) and (pointer:fine){.team button:hover{transform:translateY(-3px);border-color:var(--eng)}}
+.role{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.role .cell{background:var(--sheet2);border:1px solid var(--rule);border-radius:10px;padding:12px;display:grid;gap:4px;align-content:start;animation:rise .4s var(--ease-out) both;animation-delay:calc(var(--i)*45ms)}
+.role .cell b{font:600 .64rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--lime)}
+.role .cell.hum{border-color:rgba(255,107,74,.5)} .role .cell.hum b{color:var(--vibe)}
+.arts{display:flex;gap:8px;flex-wrap:wrap}
+.art{border:1px solid var(--eng);background:var(--eng-soft);color:var(--eng);border-radius:8px;padding:8px 12px;font:700 .8rem var(--f-mono);display:flex;gap:6px;align-items:center;transition:transform .16s var(--ease-out),box-shadow .2s}
+.art:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){.art:hover{box-shadow:var(--glow)}}
+dialog{border:1px solid rgba(34,211,238,.4);background:var(--sheet);color:var(--ink);border-radius:16px;padding:0;width:min(760px,94vw);max-height:86dvh;box-shadow:0 0 80px rgba(34,211,238,.25)}
+dialog::backdrop{background:rgba(2,2,6,.78);backdrop-filter:blur(4px)}
+dialog[open]{animation:pop .28s var(--ease-out)}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+dialog .hd{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--rule)}
+dialog pre{margin:0;padding:18px;overflow:auto;max-height:60dvh;font:.8rem/1.7 var(--f-mono);color:var(--code-ink);background:var(--code);white-space:pre-wrap;overflow-wrap:anywhere}
+dialog .ft{padding:12px 18px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--rule)}
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tool{background:var(--sheet2);border:1px solid var(--rule);border-radius:12px;padding:12px;display:grid;gap:4px;align-content:start;text-align:left;transition:transform .2s var(--ease-out),border-color .2s}
+@media (hover:hover) and (pointer:fine){.tool:hover{transform:translateY(-2px);border-color:var(--eng)}}
+.tool .tn{font-weight:800}
+.tool .pe{color:var(--muted);font-size:.86rem}
+.tool code{justify-self:start}
+.po{display:grid;gap:10px}
+.po .fb{min-height:3.2em;border-left:4px solid var(--lime);padding:8px 12px;background:var(--sheet2);border-radius:0 8px 8px 0;font-size:.92rem}
+
+/* ---------- BUILD ---------- */
+.agent{min-height:250px;max-height:340px;overflow:auto}
+.agent .ln{display:block;opacity:0;transform:translateY(6px);animation:rise .35s var(--ease-out) forwards}
+.agent .who{color:var(--eng)} .agent .me{color:var(--lime)} .agent .ok{color:var(--good)} .agent .ask{color:var(--warn)}
+.tests{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.tests li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:9px 12px;border-radius:8px;background:var(--sheet2);border:1px solid var(--rule);font:.8rem var(--f-mono);transition:border-color .3s,background-color .3s}
+.tests li .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.8rem;background:var(--rule);color:var(--muted);transition:background-color .3s,color .3s,transform .3s var(--ease-out)}
+.tests li.pend .ic{animation:spin 1s linear infinite;background:transparent;border:2px solid var(--muted);border-top-color:var(--eng);color:transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tests li.red{border-color:var(--bad);background:#2E1212} .tests li.red .ic{background:var(--bad);color:#2a0606}
+.tests li.grn{border-color:rgba(74,222,128,.45)} .tests li.grn .ic{background:var(--good);color:#04200f;transform:scale(1.08)}
+.tests li .br{color:var(--muted);font-size:.72rem}
+.sumline{font:700 1rem var(--f-mono);display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.sab{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.88rem;color:var(--muted)}
+select{background:var(--code);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;font:.82rem var(--f-mono)}
+
+/* ---------- SHIP ---------- */
+.pipe{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative;padding:20px 0 6px}
+.pipe .st{display:grid;gap:6px;justify-items:center;text-align:center;position:relative;z-index:1}
+.pipe .st .o{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;font-size:1.5rem;background:var(--sheet);border:2px solid var(--rule);transition:border-color .3s,box-shadow .3s,background-color .3s,transform .3s var(--ease-out)}
+.pipe .st.run .o{border-color:var(--eng);box-shadow:var(--glow);transform:scale(1.08)}
+.pipe .st.ok .o{border-color:var(--lime);background:#16200a;box-shadow:0 0 22px rgba(200,255,61,.4)}
+.pipe .st b{font:700 .74rem var(--f-mono);text-transform:uppercase;letter-spacing:.05em}
+.pipe .st span{font-size:.76rem;color:var(--muted);max-width:16ch}
+.pipe .wire{position:absolute;left:10%;right:10%;top:51px;height:4px;background:var(--rule);border-radius:4px;z-index:0}
+.pipe .wire i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,var(--eng),var(--lime));box-shadow:var(--glow);border-radius:4px;transition:transform 1s linear}
+.log{font-size:.82rem;min-height:150px}
+.log .ln{display:block;opacity:0;animation:rise .3s var(--ease-out) forwards}
+.log .ok{color:var(--good)}
+
+/* ---------- RETRY ---------- */
+.rtry{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rtry li{display:grid;grid-template-columns:1fr 150px 150px;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet)}
+.rtry .res{font:700 .76rem var(--f-mono);display:flex;gap:6px;align-items:center;padding:6px 10px;border-radius:8px;border:1px solid var(--rule);color:var(--muted);transition:color .3s,border-color .3s,background-color .3s,transform .3s var(--ease-out)}
+.rtry .res.bad{color:var(--bad);border-color:rgba(255,107,106,.5);background:#2E1212}
+.rtry .res.okk{color:var(--good);border-color:rgba(74,222,128,.5);background:#0F2A1A;transform:scale(1.03)}
+.rtry .res.meh{color:var(--warn);border-color:rgba(255,180,84,.4);background:#2E2210}
+.rtry .hd{font:600 .64rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.score{font:800 clamp(1.4rem,4vw,2.4rem) var(--f-display);color:var(--lime);text-shadow:0 0 24px rgba(200,255,61,.35);font-variant-numeric:tabular-nums}
+
+/* ---------- FINALE ---------- */
+.cmp{width:100%;border-collapse:collapse;font-size:.95rem}
+.cmp th,.cmp td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+.cmp th{font:600 .7rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cmp th.v,.cmp td.v{color:var(--vibe)} .cmp th.e,.cmp td.e{color:var(--eng)}
+.cmp tr{opacity:0;transform:translateY(8px);transition:opacity .45s var(--ease-out),transform .45s var(--ease-out)}
+.cmp tr.on{opacity:1;transform:none}
+.cmp td:first-child{color:var(--ink);font-weight:600}
+.tbl{overflow-x:auto}
+.quote{font:800 clamp(1.3rem,3.6vw,2.2rem)/1.2 var(--f-display);text-transform:uppercase;color:var(--lime);max-width:26ch;text-shadow:0 0 30px rgba(200,255,61,.25)}
+.quiz{display:grid;gap:10px}
+.quiz .qq{font-weight:800}
+.quiz .ans{display:grid;gap:8px}
+.quiz .ans button{text-align:left;border:1.5px solid var(--rule);background:var(--sheet2);border-radius:10px;padding:10px 14px;transition:transform .16s var(--ease-out),border-color .2s,background-color .2s}
+.quiz .ans button:active{transform:scale(.985)}
+.quiz .ans button.right{border-color:var(--good);background:#0F2A1A}
+.quiz .ans button.wrong{border-color:var(--bad);background:#2E1212}
+.quiz .fb{font-size:.9rem;color:var(--muted);min-height:1.4em}
+.outc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.outc div{background:var(--sheet2);border:1px solid var(--rule);border-radius:10px;padding:12px;font-size:.86rem;display:grid;gap:4px;align-content:start}
+.outc b{font:800 .85rem var(--f-display);color:var(--eng)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+/* ---------- BMAD OUTPUT ---------- */
+.outg{display:grid;grid-template-columns:minmax(250px,.8fr) 1.5fr;gap:clamp(12px,2vw,22px);align-items:start}
+.outg>*{min-width:0}
+.tree{font:.78rem/1.85 var(--f-mono);list-style:none;margin:0;padding:0;display:grid}
+.tree .d{color:var(--muted);padding-left:calc(var(--l)*14px)}
+.tree .d::before{content:"▸ ";color:var(--eng)}
+.tree .x{color:#6c7096;padding-left:calc(var(--l)*14px + 8px)}
+.tree button.f{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:1px 8px 1px calc(var(--l)*14px + 8px);color:var(--ink);font:inherit;transition:background-color .2s,box-shadow .2s}
+.tree button.f::before{content:"📄"}
+.tree button.f[aria-pressed="true"]{background:var(--eng-soft);box-shadow:inset 3px 0 0 var(--eng)}
+@media (hover:hover) and (pointer:fine){.tree button.f:hover{background:rgba(34,211,238,.08)}}
+.tree .tg{font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:var(--lime);border:1px solid rgba(200,255,61,.4);border-radius:4px;padding:0 5px;margin-left:auto;white-space:nowrap}
+.snap{border:1px solid rgba(34,211,238,.35);border-radius:12px;overflow:hidden;background:var(--code);position:relative;box-shadow:var(--glow)}
+.snap .chrome{display:flex;gap:7px;align-items:center;padding:9px 12px;background:var(--sheet2);border-bottom:1px solid var(--rule);font:.7rem var(--f-mono);color:var(--muted)}
+.snap .chrome i{width:10px;height:10px;border-radius:50%;background:#ff5f57;flex:none}
+.snap .chrome i:nth-child(2){background:#febc2e}.snap .chrome i:nth-child(3){background:#28c840}
+.snap .pth{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:6px}
+.snap pre{margin:0;padding:14px 16px;font:.76rem/1.7 var(--f-mono);white-space:pre-wrap;overflow-wrap:anywhere;color:var(--code-ink);max-height:44dvh;overflow:auto}
+.snap pre .h{color:var(--eng);font-weight:600}.snap pre .m{color:#6c7096}.snap pre .k{color:var(--lime)}
+.snap .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.snap.shot .flash{animation:flash .5s ease-out}
+.snap.shot pre{animation:rise .45s var(--ease-out)}
+@keyframes flash{0%{opacity:.5}100%{opacity:0}}
+.snap .cap{padding:10px 14px;border-top:1px solid var(--rule);font-size:.84rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.stats div{background:var(--sheet2);border:1px solid var(--rule);border-radius:10px;padding:12px;display:grid;gap:2px}
+.stats b{font:800 clamp(1.3rem,3vw,2rem) var(--f-display);color:var(--lime);font-variant-numeric:tabular-nums}
+.stats span{font-size:.78rem;color:var(--muted)}
+
+/* ---------- GIT ---------- */
+.gloss{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.gloss div{background:var(--sheet2);border:1px solid var(--rule);border-radius:10px;padding:10px 12px;font-size:.86rem;display:block}
+.gloss b{display:block;margin-bottom:2px;font:700 .78rem var(--f-mono);color:var(--eng);text-transform:uppercase;letter-spacing:.06em}
+.gitg{width:100%;height:auto;overflow:visible}
+.gitg .lane{stroke:var(--rule);stroke-width:1;stroke-dasharray:3 7}
+.gitg .edge{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.gitg.go .edge{animation:draw .9s var(--ease-out) forwards;animation-delay:var(--d)}
+.gitg .cm{cursor:pointer;opacity:0}
+.gitg.go .cm{animation:fade .4s ease-out forwards;animation-delay:var(--d)}
+.gitg .cm circle{fill:var(--sheet);stroke-width:3.5;transition:stroke .2s}
+.gitg .cm.sel circle{stroke:var(--lime)!important;fill:#16200a}
+.gitg .lc{opacity:0;transition:opacity .4s var(--ease-out);pointer-events:none}
+.gitg .lc.show{opacity:1;pointer-events:auto;cursor:pointer}
+.gitg .lc .edge{stroke-dashoffset:0;stroke-dasharray:6 6}
+.gitg text{font:600 10.5px var(--f-mono);fill:var(--muted)}
+.gitg .tg{fill:var(--lime)} .gitg .br{fill:var(--eng)}
+.gitg #mainPtr{transition:transform .8s var(--ease-io)}
+.gitg #mainPtr rect{fill:var(--lime)}.gitg #mainPtr text{fill:var(--lime-ink);font-weight:800;text-anchor:middle}
+.prod{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:600 .82rem var(--f-mono)}
+.prod b{color:var(--lime)}
+.cinfo{min-height:3.6em;border-left:4px solid var(--eng);background:var(--sheet2);border-radius:0 8px 8px 0;padding:8px 12px;font-size:.9rem}
+.cinfo .mono{color:var(--eng)}
+.f4{display:flex;align-items:flex-start;padding:6px 0}
+.f4 .nd{display:grid;gap:6px;justify-items:center;text-align:center;flex:none;width:92px}
+.f4 .nd .o{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:1.45rem;background:var(--sheet);border:2px solid var(--rule);transition:border-color .3s,box-shadow .3s,background-color .3s,transform .3s var(--ease-out)}
+.f4 .nd.run .o{border-color:var(--eng);box-shadow:var(--glow);transform:scale(1.08)}
+.f4 .nd.ok .o{border-color:var(--lime);background:#16200a;box-shadow:0 0 20px rgba(200,255,61,.4)}
+.f4 .nd b{font:700 .7rem var(--f-mono);text-transform:uppercase;letter-spacing:.04em}
+.f4 .nd span{font-size:.72rem;color:var(--muted)}
+.f4 .wr{position:relative;flex:1;height:4px;margin-top:27px;background:var(--rule);border-radius:4px;min-width:20px}
+.f4 .wr .pk{position:absolute;top:50%;left:0;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--lime);box-shadow:0 0 14px var(--lime);opacity:0}
+.ghb{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.ghb span{font:600 .6rem var(--f-mono);border:1px solid var(--rule);border-radius:4px;padding:1px 5px;color:var(--muted);transition:color .3s,border-color .3s,background-color .3s}
+.ghb span.upd{color:var(--lime-ink);background:var(--lime);border-color:var(--lime)}
+.crow{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);transition:border-color .3s,background-color .3s}
+.crow .ix{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 .72rem var(--f-mono);background:var(--rule);color:var(--muted)}
+.crow.cur{border-color:var(--eng);background:var(--eng-soft)}
+.crow.cur .ix{background:var(--eng);color:#04131A}
+.crow.done .ix{background:var(--lime);color:var(--lime-ink)}
+.crow .cd{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.crow .cd code{flex:1;min-width:0}
+.crow .pe{font-size:.82rem;color:var(--muted);margin-top:3px}
+.crows{display:grid;gap:8px}
+.cp{border:1px solid rgba(220,231,244,.3);background:transparent;border-radius:5px;font-size:.7rem;padding:2px 8px;color:var(--code-ink);flex:none}
+@media (max-width:860px){
+  .outg,.gloss,.stats{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}
+  .f4 .nd{width:64px}.f4 .nd span{display:none}.f4 .nd .o{width:46px;height:46px}.f4 .wr{margin-top:21px}
+}
+
+@media (max-width:860px){
+  .hook,.cols,.role,.tools,.cols.t3,.chal,.outc,.notes .in{grid-template-columns:1fr}
+  .team{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rtry li{grid-template-columns:1fr 1fr}.rtry li>:first-child{grid-column:1/-1}
+  .pipe .st span{display:none}
+  .seq,.dots{display:none}.steplbl{display:block}
+  .poll .row,.poll button.opt{grid-template-columns:110px 1fr 30px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .stage.on .rv{animation:fade .25s ease both!important}
+  .flip>.in,.fc div{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top" role="banner">
+    <span class="brand">AI ⟶ Trust</span>
+    <nav class="seq" id="seq" aria-label="Learning sequence"></nav>
+    <div class="hud">
+      <span class="xp" id="xp" aria-live="polite">0 XP</span>
+      <span class="clock" id="clock" title="Presenter clock">20:00</span>
+      <button class="btn go" id="clkBtn" type="button">Start</button>
+      <button class="btn" id="notesBtn" type="button" aria-pressed="false" title="Presenter notes (P)">Notes</button>
+    </div>
+  </header>
+  <div class="prog" aria-hidden="true"><i id="prog"></i></div>
+
+  <main class="viewport" id="vp" tabindex="-1"><div id="stages"></div></main>
+
+  <footer class="nav">
+    <button class="btn" id="prev" type="button">← Back</button>
+    <div class="dots" id="dots" role="tablist" aria-label="Steps"></div>
+    <span class="steplbl" id="stepLbl" aria-hidden="true"></span>
+    <button class="btn go" id="next" type="button">Next →</button>
+    <div class="credit"><span>Made with <span class="heart" aria-label="love">&#10084;</span> by <b>Amer Radwan</b></span><a href="https://www.linkedin.com/in/amerradwan/" target="_blank" rel="noopener">LinkedIn &#8599;</a></div>
+  </footer>
+</div>
+
+<aside class="notes" id="notes" aria-label="Presenter notes"><div class="in" id="notesIn"></div></aside>
+<div class="toast" id="toast" aria-live="polite"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<dialog id="dlg" aria-labelledby="dlgT"><div class="hd"><h3 id="dlgT"></h3><button class="btn" id="dlgX" type="button">Close ✕</button></div><pre id="dlgB" tabindex="0"></pre><div class="ft" id="dlgF"></div></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?Math.min(ms,60):ms));
+
+/* =============== DATA =============== */
+const SEQ=['HOOK','PREDICT','EXPERIENCE','FAIL','DISCOVER','EXPLAIN','REBUILD','VERIFY','REFLECT'];
+/* stage -> which SEQ indexes are active */
+const STAGES=[
+ {id:'title', nm:'Title',   at:null, seq:[],      say:'Hold on the title. Let the two lines race. Ask: "Two apps. Same AI. Same prompt budget. Which one would you trust?"', do:'Press Next when the race finishes.', plan:'If animation stutters on the projector, enable OS reduced motion; the page degrades gracefully.'},
+ {id:'hook',  nm:'Hook',    at:0,    seq:[0,1],  say:'"AI built this application in 60 seconds. Scan the code, paste three terms from any course, flip through. Now: would you trust it for tomorrow\'s exam?" Take the vote BEFORE they break it.', do:'Paste your live Vercel link, show QR, tap the confidence poll as hands go up.', plan:'No Wi-Fi? Use the demo phone on the left and a hotspot. Do NOT reveal weaknesses yet.'},
+ {id:'break', nm:'Break it',at:120,  seq:[2,3],  say:'"You are software detectives. 90 seconds. Pick a card, try the break on the app, then tell me: did it BREAK or HOLD?" Flip each card to reveal what the instructor verified.', do:'Start the 90 s timer. Click Broke/Held as students call out. Ask "why does it matter?" for the +100 bonus.', plan:'Cards were verified against this exact build with its real parser. Re-rehearse the day before: one-prompt results vary. Arabic display and very long text need a visual check on your device.'},
+ {id:'reveal',nm:'Reveal',  at:240,  seq:[4],    say:'"Here is the one prompt I used. I accepted everything without reading. Great for a demo. Now look at what engineers do before any code exists."', do:'Run the vibe flow, then the engineered flow; click each stage for one sentence. Then take the two votes.', plan:'Fair-play line: vibe coding is not bad. It is untested confidence.'},
+ {id:'team',  nm:'AI team', at:360,  seq:[5],    say:'"BMAD gives the AI a team of specialists. Same AI, different job each time. And at every stage a human still decides." Make students the Product Owner with the duplicate-policy choice.', do:'Click each specialist. Open artifacts. Let a student pick merge vs keep.', plan:'Agent names and commands depend on the installed BMAD version. Show your real installed ones in the terminal if asked.'},
+ {id:'out',   nm:'BMAD output',at:480, seq:[5],  say:'"This is what the AI team actually left in the repo: real documents, committed to Git. Click a file and look at the snapshot. Then follow ONE rule from the brief all the way to a test."', do:'Click brief, PRD, architecture, epics, story 1.3, tests. Press "Follow one rule" and narrate each hop.', plan:'Snapshots are excerpts of the real files on the demo-done branch (shortened). If asked, open the file in your editor to show the full text.'},
+ {id:'build', nm:'Build+test',at:600, seq:[6],    say:'"I\'m the reviewer. It asks before it guesses, shows a plan, and only codes after I say yes. Each green test is one of your breaks, now impossible."', do:'Run the agent replay, then run the tests. Sabotage one rule to show a test going red.', plan:'Live build overrunning at 15:00? Use the emergency switch: push the rehearsed demo-done branch.'},
+ {id:'git',   nm:'Git + GitHub',at:780, seq:[6],  say:'"Git is the save history. Branches are parallel timelines, so the experiment never touches the live one. Watch the code travel: my laptop, GitHub, Vercel, your phones."', do:'Press Play history, then step through the six commands with Run next. Try Emergency to show demo-done going live.', plan:'Force-push only on a repo you own and set up for this demo. Reset puts the vibe version back on the live link.'},
+ {id:'ship',  nm:'Deploy',  at:900,  seq:[6],    say:'"Same link. Refresh. Try to break it again." Run the pipeline while they refresh.', do:'Press Deploy. Narrate each stage. Confetti means the link is live.', plan:'Run npm run build before pushing. Phones stuck on old version: pull to refresh or open a private tab.'},
+ {id:'retry', nm:'Retry',   at:1020, seq:[7],    say:'"Same challenges. New app." Students retry on phones; you run them on screen.', do:'Press Run all. Watch red turn green. Point at the survivors: "these held before, but now a test guards them".', plan:'If the live deploy failed, show this stage as the rehearsal recording.'},
+ {id:'finale',nm:'Finale',  at:1110, seq:[8],    say:'"AI does the typing either way. You decide what gets built, and whether it can be trusted." Close on the quote.', do:'Reveal the comparison, take the three-question retrieval quiz, end on the quote.', plan:'Over time? Skip the quiz and keep the table plus the quote.'}
+];
+const CHAL=[
+ {t:'The hyphen term',lv:1,xp:100,tr:'Wi-Fi - wireless network',copy:'Wi-Fi - wireless network',truth:'held',
+  why:'A shortcut would split on every hyphen. This build prefers " - " with spaces, so the card is correct.',fix:'It held, but nothing in the repo proves it. Any later edit could silently break it.',test:'parses "Wi-Fi - wireless network" into 1 card',how:'Acceptance criterion'},
+ {t:'The empty box',lv:1,xp:100,tr:'Clear the box. Is Start enabled?',copy:'',truth:'held',
+  why:'Start is disabled when there are 0 valid cards. Good instinct from the AI.',fix:'Held. The engineered version also shows a hint explaining why Start is off.',test:'empty input gives 0 cards and Start disabled',how:'Acceptance criterion'},
+ {t:'Refresh the page',lv:1,xp:100,tr:'Paste cards, then refresh',copy:null,truth:'held',
+  why:'Cards are saved in the browser (localStorage), so they come back.',fix:'Held. But "cards survive refresh" was never written down, so nobody would notice if it vanished.',test:'saved cards load back after reload',how:'Analysis (brief)'},
+ {t:'Tap fast on scoring',lv:2,xp:200,tr:'Hammer "Knew it" on one card',copy:null,truth:'held',
+  why:'Marking requires a flipped card and advances right away, so the score cannot exceed the total.',fix:'Held. A test would lock this behaviour in for every future change.',test:'score stays at or below the card count',how:'Acceptance criterion'},
+ {t:'Duplicate flashcards',lv:2,xp:200,tr:'Paste the same line twice',copy:'Osmosis - Diffusion of water\nOsmosis - Diffusion of water',truth:'real',
+  why:'Two identical cards appear, so your score and study time are inflated by copies.',fix:'The Analyst asked "merge or keep duplicates?" The answer (merge) is written in the PRD.',test:'two identical lines give 1 card',how:'Analysis question'},
+ {t:'The wall of notes',lv:2,xp:200,tr:'Paste 300 lines or one huge paragraph',copy:Array.from({length:30},(_,i)=>`Term ${i+1} - Definition ${i+1}`).join('\n'),truth:'real',
+  why:'There is no card limit (verified: 300 lines made 300 cards). A very long term can also overflow the card on a phone: check on your device.',fix:'Non-functional requirement: max 200 cards with a clear message, text wraps on a 360 px phone.',test:'301 lines give 200 cards and a warning',how:'Non-functional requirement'},
+ {t:'Right-to-left text',lv:3,xp:300,tr:'Paste Arabic: خلية - وحدة الحياة الأساسية',copy:'خلية - وحدة الحياة الأساسية',truth:'maybe',
+  why:'The parser splits it correctly (verified). Whether punctuation and mixed text look right depends on direction handling nobody specified, so inspect the card on screen.',fix:'Requirement: any language is supported; card text uses automatic direction.',test:'card text uses automatic text direction',how:'Non-functional requirement'},
+ {t:'Malformed input',lv:3,xp:300,tr:'Paste: e-mail   or   Note: remember to eat',copy:'e-mail\nNote: remember to eat\nWi-Fi',truth:'real',
+  why:'Verified: "e-mail" becomes a card "e / mail", "Wi-Fi" alone becomes "Wi / Fi", and a sentence with a colon becomes a bogus card. The fallback separators guess.',fix:'Only " - " is a separator. Lines without it are skipped and listed in a friendly message.',test:'skips "e-mail" and reports 1 skipped line',how:'Acceptance criterion'}
+];
+const ROLES=[
+ {em:'🔎',nm:'Analyst',ag:'Mary',what:'Understand the real problem before building anything.',why:'Vibe coding never asked: do cards survive a refresh? Merge duplicates? Which languages?',tool:'BMAD analyst agent: /bmad-product-brief',human:'Answers the interview. This is where "merge duplicates" gets decided.',art:['brief'],feeds:'The brief tells the PM exactly what rules to write down.'},
+ {em:'📋',nm:'Product Manager',ag:'John',what:'Turn needs into testable requirements and small stories.',why:'A rule you can test beats a wish you can only hope for.',tool:'BMAD PM agent: /bmad-prd, then epics and stories',human:'Checks every break on the board has a matching criterion. Approves.',art:['prd','stories'],feeds:'Acceptance criteria become the exact test names the QA step will run.'},
+ {em:'🏛️',nm:'Architect',ag:'Winston',what:'Design a simple structure so changes stay safe.',why:'If parsing is its own function, it can be tested without a browser.',tool:'BMAD architect agent: /bmad-create-architecture',human:'Checks: no backend, no secrets, tests included. Approves the design.',art:['arch'],feeds:'Tells the developer where each piece of code goes.'},
+ {em:'⌨️',nm:'Developer',ag:'Amelia',what:'Implement one small story at a time.',why:'Small steps are reviewable. A whole app in one shot is not.',tool:'Claude Code (or equivalent) + /bmad-dev-story',human:'Reviews the plan, answers its questions, approves before it writes code.',art:['code'],feeds:'Working code is what the tests can now examine.'},
+ {em:'🧪',nm:'Tester / QA',ag:'Murat',what:'Prove the rules hold, automatically, forever.',why:'Tests are the evidence. A demo only shows one lucky path.',tool:'Vitest, an automated test runner (npm test)',human:'Reads the red/green results and decides if the evidence is enough.',art:['tests'],feeds:'Green tests are the gate: no green, no release.'},
+ {em:'🚀',nm:'Release',ag:'Git → Vercel',what:'Deliver the change and watch what happens.',why:'Users only benefit when it is live. Feedback starts the loop again.',tool:'Git/GitHub (history) + Vercel (hosting) + the browser (real check)',human:'Presses the button and tries the breaks again on the live link.',art:['deploy'],feeds:'Real-world feedback becomes the next brief.'}
+];
+const ARTS={
+ brief:{n:'Product brief',f:'brief.md',b:`# FlashFlip: Product Brief
+
+PROBLEM
+  First-year students revise from messy notes.
+  They need a fast way to quiz themselves.
+
+USERS
+  Phones, any language, no login.
+
+DECISIONS THE HUMAN MADE (the AI asked)
+  - Cards survive a refresh (saved in the browser)
+  - Duplicate terms are merged
+  - Maximum 200 cards per deck
+
+OUT OF SCOPE
+  Accounts, sync, spaced repetition.`,why:'Simplified. The agent interviewed the human; these answers did not exist in the vibe prompt.'},
+ prd:{n:'PRD',f:'prd.md',b:`# FlashFlip: PRD (MVP)
+
+AC-1  Given "Wi-Fi - wireless network"
+      Then 1 card: term "Wi-Fi".
+AC-2  Given a line with no " - "
+      Then it is skipped AND listed to the student.
+AC-3  Given nothing pasted
+      Then Start is disabled with a hint.
+AC-4  Given two identical terms
+      Then they merge into 1 card.
+AC-5  Given more than 200 lines
+      Then 200 cards and a warning.
+AC-6  Given Arabic or any RTL text
+      Then it displays in the correct direction.
+AC-7  Score never exceeds the card count.`,why:'Simplified. Each criterion is one sentence a test can check.'},
+ stories:{n:'User stories',f:'stories.md',b:`EPIC: FlashFlip MVP
+
+[x] Story 1  Paste cards + flip quiz         (done)
+[x] Story 2  Score, shuffle, keep after refresh (done)
+[>] Story 3  Bulletproof paste               (LIVE TODAY)
+      - first " - " only
+      - skip + list bad lines
+      - merge duplicates
+      - cap 200, wrap long text
+      - right-to-left support
+      - a unit test for every rule`,why:'Simplified. Small, ordered, reviewable steps.'},
+ arch:{n:'Architecture',f:'architecture.md',b:`# FlashFlip: Architecture
+
+STACK     Next.js + TypeScript + Tailwind
+STORAGE   Browser localStorage (no backend, no keys)
+HOSTING   Vercel, one page
+
+app/
+  page.tsx           screen
+  lib/parse.ts       PURE function: text -> cards
+  lib/parse.test.ts  Vitest unit tests
+
+DECISION
+  Parsing and scoring are pure functions so
+  they can be tested without a browser.`,why:'Simplified. One decision that makes everything after it testable.'},
+ code:{n:'Source code',f:'app/lib/parse.ts',b:`// Story 3 (simplified)
+export function parseCards(text: string) {
+  const byTerm = new Map<string, Card>();
+  const skipped: string[] = [];
+
+  for (const raw of text.split(/\\r?\\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    const i = line.indexOf(" - ");        // first " - " only
+    if (i < 1) { skipped.push(line); continue; }
+
+    const term = line.slice(0, i).trim();
+    const def  = line.slice(i + 3).trim();
+    if (!def) { skipped.push(line); continue; }
+
+    byTerm.set(term.toLowerCase(), { term, def }); // merge dupes
+  }
+  const all = [...byTerm.values()];
+  return { cards: all.slice(0, 200), skipped, capped: all.length > 200 };
+}`,why:'Simplified illustration of the engineered approach, not a byte-for-byte copy.'},
+ tests:{n:'Automated tests',f:'app/lib/parse.test.ts',b:`import { describe, it, expect } from "vitest";
+import { parseCards } from "./parse";
+
+describe("parseCards", () => {
+  it('keeps "Wi-Fi" intact', () => {
+    expect(parseCards("Wi-Fi - wireless network").cards[0].term)
+      .toBe("Wi-Fi");
+  });
+  it("skips lines without a separator", () => {
+    expect(parseCards("e-mail").skipped).toHaveLength(1);
+  });
+  it("merges duplicate terms", () => {
+    expect(parseCards("A - 1\\nA - 1").cards).toHaveLength(1);
+  });
+  it("caps at 200 cards", () => {
+    const big = Array.from({length: 301}, (_, i) => \`T\${i} - d\`).join("\\n");
+    expect(parseCards(big).cards).toHaveLength(200);
+  });
+});`,why:'Simplified. Run with: npm test'},
+ deploy:{n:'Deployment output',f:'vercel build log',b:`> npm run build
+  Compiled successfully
+  Checking validity of types ... ok
+
+> git push origin engineered:main
+  remote: Vercel: Deployment started
+
+  Building ...   42s
+  Build completed
+  Assigning domains ...
+  Production: https://<your-flashflip>.vercel.app  READY`,why:'Simplified. The same link now serves the engineered app.'}
+};
+const TOOLS=[
+ {n:'AI coding assistant',e:'🤖',pe:'A chat partner that can read and write your project files. It types fast; you steer.',c:'claude'},
+ {n:'BMAD Method',e:'🧭',pe:'A set of AI "job roles" and checklists so the AI plans before it codes.',c:'/bmad-help'},
+ {n:'Git / GitHub',e:'🕰️',pe:'A save history for your project. Undo anything, and share it safely.',c:'git commit -m "..."'},
+ {n:'Vitest',e:'🧪',pe:'Small programs that check your rules automatically in seconds.',c:'npm test'},
+ {n:'Vercel',e:'🌍',pe:'A service that puts your app on a public link when you push.',c:'git push'},
+ {n:'The browser',e:'🕹️',pe:'Where real users meet your app. The final, honest test.',c:'refresh + try to break it'}
+];
+const TESTS=[
+ {n:'keeps "Wi-Fi - wireless network" as 1 card',br:'Hyphen',rule:'sep'},
+ {n:'skips "e-mail" and reports it',br:'Malformed',rule:'skip'},
+ {n:'empty input: 0 cards, Start disabled',br:'Empty',rule:'empty'},
+ {n:'merges duplicate terms',br:'Duplicates',rule:'dupe'},
+ {n:'301 lines give 200 cards + warning',br:'Wall of notes',rule:'cap'},
+ {n:'card text uses dir="auto"',br:'Right-to-left',rule:'rtl'},
+ {n:'saved cards load back after reload',br:'Refresh',rule:'persist'},
+ {n:'score never exceeds card count',br:'Tap fast',rule:'score'}
+];
+const ENG_FLOW=[
+ ['Analysis','Find the real problem and the real users.'],
+ ['Requirements','Write down what "correct" means, in testable sentences.'],
+ ['Design','Choose a simple structure that is easy to test.'],
+ ['Implementation','AI writes small pieces; a human reviews each one.'],
+ ['Testing','Automatic checks prove the rules still hold.'],
+ ['Deployment','Ship it to a link people can use.'],
+ ['Feedback','Watch real use and feed it into the next idea.']
+];
+const ACH=[['first','💥 First Break'],['detective','🕵️ Detective (3 judged)'],['honest','🛡️ Honest Tester'],['owner','🧑‍💼 Product Owner'],['green','✅ Green Suite'],['ship','🚀 Shipped'],['trust','🏆 Trusted']];
+
+/* =============== STATE =============== */
+let S=Object.assign({step:0,xp:0,judged:{},why:{},ach:{},poll:{c:[0,0,0,0,0]},v1:[0,0],v2:[0,0],po:null,link:'',tests:'idle',shipped:false,retried:false,quiz:{}},store.get('aicbi.v1',{}));
+S.judged=S.judged||{};S.why=S.why||{};S.ach=S.ach||{};S.quiz=S.quiz||{};S.poll=S.poll||{c:[0,0,0,0,0]};
+const save=()=>store.set('aicbi.v1',S);
+const maxStep=STAGES.length-1;
+
+/* =============== UTIL =============== */
+function toast(msg){const t=$('toast'),d=document.createElement('div');d.textContent=msg;t.appendChild(d);setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),260)},2600);}
+function addXP(n,label){S.xp+=n;save();renderXP();if(label)toast('+'+n+' XP · '+label);}
+function renderXP(){$('xp').textContent=S.xp+' XP';}
+function unlock(k){if(S.ach[k])return;S.ach[k]=1;save();const a=ACH.find(x=>x[0]===k);toast('Achievement: '+a[1]);paintBadges();}
+function paintBadges(){document.querySelectorAll('[data-badges]').forEach(el=>{el.innerHTML=ACH.map(a=>`<span class="badge${S.ach[a[0]]?' got':''}">${a[1]}</span>`).join('');});}
+function copy(txt,btn){const done=()=>{if(btn){const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>btn.textContent=o,1200)}};try{navigator.clipboard.writeText(txt).then(done,done)}catch(e){done()}}
+
+/* confetti */
+const cv=$('confetti'),cx=cv.getContext('2d');let parts=[],raf=0;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight}
+addEventListener('resize',sizeCv);sizeCv();
+function confetti(){
+  if(RM){return}
+  const cols=['#22D3EE','#C8FF3D','#FF6B4A','#F3F4FF'];
+  for(let i=0;i<150;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*200,y:innerHeight*.6,vx:(Math.random()-.5)*16,vy:-Math.random()*17-4,s:4+Math.random()*6,c:cols[i%4],r:Math.random()*6,vr:(Math.random()-.5)*.4,l:1});
+  if(!raf)raf=requestAnimationFrame(frame);
+}
+function frame(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{p.vy+=.45;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.r+=p.vr;p.l-=.009;cx.save();cx.globalAlpha=Math.max(p.l,0);cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);cx.restore();});
+  parts=parts.filter(p=>p.l>0&&p.y<cv.height+20);
+  raf=parts.length?requestAnimationFrame(frame):0; if(!raf)cx.clearRect(0,0,cv.width,cv.height);
+}
+
+/* =============== STAGE MARKUP =============== */
+const stagesEl=$('stages');
+function titleLetters(txt,start){return txt.split('').map((c,i)=>c===' '?' ':`<span class="l" style="--k:${start+i}">${esc(c)}</span>`).join('')}
+const H={};
+H.title=()=>`
+<section class="stage title" id="st-title" aria-label="Title">
+  <span class="eyebrow rv" style="--i:0">First-year challenge · 20 minutes · FlashFlip</span>
+  <h1 aria-label="AI Can Build It. Can You Trust It?"><span aria-hidden="true">${titleLetters('AI Can Build It.',0)}<br><span class="grad">${titleLetters('Can You Trust It?',16)}</span></span></h1>
+  <p class="sub rv" style="--i:4"><span class="vibe">Vibe Coding</span> <span class="lime">vs.</span> <span class="eng">Engineered AI-SDLC</span></p>
+  <div class="race rv" style="--i:6" aria-hidden="true">
+    <svg viewBox="0 0 800 150">
+      <path class="tr" d="M40 40H700"/><path class="tr" d="M40 110H700"/>
+      <path class="rv1" pathLength="1" stroke="#FF6B4A" d="M40 40H700" style="filter:drop-shadow(0 0 8px #FF6B4A)"/>
+      <path class="rv2" pathLength="1" stroke="#22D3EE" d="M40 110H700" style="filter:drop-shadow(0 0 8px #22D3EE)"/>
+      <text x="40" y="26">TEAM VIBE · one prompt</text><text x="40" y="136">TEAM ENGINEER · requirements → design → tests → release</text>
+      ${['Brief','PRD','Design','Code','Tests','Ship'].map((n,i)=>`<g class="pop" style="--d:${1.1+i*0.62}s"><circle cx="${110+i*108}" cy="110" r="6" fill="#22D3EE"/></g>`).join('')}
+      <g class="pop" style="--d:2.3s"><circle cx="700" cy="40" r="9" fill="#FF6B4A"/><text x="716" y="44" fill="#FF6B4A">APP in 60 s</text></g>
+      <g class="pop" style="--d:5.4s"><circle cx="700" cy="110" r="9" fill="#C8FF3D"/><text x="716" y="114" fill="#C8FF3D">APP + evidence</text></g>
+      <text class="q pop" style="--d:5.8s" x="760" y="82">?</text>
+    </svg>
+  </div>
+  <p class="say rv" style="--i:7">Same AI. Same challenge. <b class="lime">Which result would you trust with tomorrow's exam?</b></p>
+  <div class="cta rv" style="--i:8"><button class="btn go" data-go="1" type="button">Begin the mission →</button><span class="note mono" style="color:var(--muted);font-size:.8rem">← → keys to navigate · P for presenter notes</span></div>
+</section>`;
+
+H.hook=()=>`
+<section class="stage hook" id="st-hook" aria-label="Act 1 The hook">
+  <div style="display:grid;gap:16px;align-content:start">
+    <span class="eyebrow rv" style="--i:0">Act 1 · Mission: Can you trust this app?</span>
+    <h2 class="rv" style="--i:1">AI built this in</h2>
+    <div class="big60 rv" style="--i:2" id="big60" aria-label="60 seconds">0s</div>
+    <p class="lead rv" style="--i:3">You get three minutes of curiosity, not a lecture. <b>Scan, paste three terms from any course, and flip through the cards.</b> Don't look for problems yet.</p>
+    <div class="card rv" style="--i:4">
+      <div class="qrbox">
+        <div class="qr" id="qr">Paste link →</div>
+        <div style="display:grid;gap:8px"><label for="lnk" class="mono" style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">LIVE FLASHFLIP LINK</label>
+          <input class="txt" id="lnk" type="url" inputmode="url" placeholder="https://your-flashflip.vercel.app" autocomplete="off">
+          <span class="chip live" style="justify-self:start">QR updates as you type</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;gap:16px;align-content:start">
+    <div class="phone rv" style="--i:3" aria-label="FlashFlip preview"><div class="scr">
+      <h4>FlashFlip</h4>
+      <div class="ta">Photosynthesis - Process plants use to turn light into glucose
+Osmosis - Diffusion of water</div>
+      <button class="fc" type="button" id="demoFc" aria-label="Flip the demo flashcard"><div><span>Osmosis</span><span>Diffusion of water across a semipermeable membrane</span></div></button>
+      <div class="st">Start studying</div></div></div>
+    <div class="card rv" style="--i:5">
+      <h3 id="pq1">Would you trust this to prepare for tomorrow's exam?</h3>
+      <div class="poll" id="poll" role="group" aria-labelledby="pq1" style="margin-top:12px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="pollSim" type="button">Simulate a room (rehearsal)</button><button class="btn" id="pollReset" type="button">Reset</button></div>
+      <p class="mono" style="font-size:.7rem;color:var(--muted);margin-top:8px">Instructor-controlled tally: tap a row as hands go up. Stored on this device only.</p>
+    </div>
+  </div>
+</section>`;
+
+H.break=()=>`
+<section class="stage" id="st-break" aria-label="Act 2 Break the app">
+  <div class="breakhead rv" style="--i:0">
+    <div><span class="eyebrow">Act 2 · Mission: Become a software detective</span><h2 style="margin-top:8px">Break the app</h2></div>
+    <div style="display:flex;gap:14px;align-items:center"><div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" id="ringFg" cx="50" cy="50" r="42"/></svg><b id="ringT">90</b></div>
+    <button class="btn hot" id="tmrBtn" type="button">Start 90 s</button></div>
+  </div>
+  <p class="lead rv" style="--i:1">Pick a challenge, try it on FlashFlip, then judge: <b class="vibe">Broke</b> or <b style="color:var(--good)">Held</b>? Flip reveals what the instructor verified. Points: easy 100 · medium 200 · hard 300 · explain why +100.</p>
+  <div class="card rv" style="--i:2;display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap;align-items:center">
+    <div><div class="mono" style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">BREAK BOARD</div><div class="score" id="bbScore">0 judged</div></div>
+    <div class="badges" data-badges></div>
+  </div>
+  <ul class="chal rv" style="--i:3" id="chal"></ul>
+  <div class="card rv" style="--i:4" id="surv" hidden><span class="eyebrow">The lesson hiding in the green cards</span><p class="say" style="margin-top:8px"><b class="lime">"It held" is not the same as "we know it holds."</b> The AI got some things right by luck of its habits. With no written rule and no test, nobody can prove it, and the next change can quietly undo it.</p></div>
+  <button class="btn" id="chalReset" type="button" style="justify-self:start">Clear the board</button>
+</section>`;
+
+H.reveal=()=>`
+<section class="stage" id="st-reveal" aria-label="Act 3 The big reveal">
+  <span class="eyebrow rv" style="--i:0">Act 3 · Mission: Discover the difference</span>
+  <h2 class="rv" style="--i:1">Two ways to get from idea to app</h2>
+  <div class="cols">
+    <div class="card rv" style="--i:2;border-color:rgba(255,107,74,.4)">
+      <span class="chip v">Team Vibe · 1 prompt · ~1 minute</span>
+      <div class="term" style="margin-top:12px"><span class="wh">The exact prompt, accepted without reading</span><span id="vprompt">&nbsp;</span><span class="cur" aria-hidden="true"></span></div>
+      <div class="flowrow vf" id="vflow" style="margin-top:14px"></div>
+      <button class="btn hot" id="vPlay" type="button" style="margin-top:14px">▶ Run the vibe flow</button>
+    </div>
+    <div class="card rv" style="--i:3;border-color:rgba(34,211,238,.4)">
+      <span class="chip e">Team Engineer · plan first · tests · review</span>
+      <div class="flowrow ef" id="eflow" style="margin-top:14px;gap:6px 0"></div>
+      <div class="stagebox" id="eInfo" style="margin-top:12px;min-height:3.4em"><span style="color:var(--muted)">Run the flow, then click a stage for its one-sentence meaning.</span></div>
+      <button class="btn go" id="ePlay" type="button" style="margin-top:12px">▶ Run the engineered flow</button>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="card rv" style="--i:4"><h3>Speed vs. confidence</h3>
+      <svg class="chart" id="chart" viewBox="0 0 420 220" role="img" aria-label="Chart: vibe coding reaches a first demo fast with low confidence; engineering is slower to a demo but reaches high confidence.">
+        <path class="ax" d="M40 190H400M40 190V20" fill="none"/>
+        <text x="40" y="208">time →</text><text x="4" y="14">confidence ↑</text>
+        <path class="ln" pathLength="1" stroke="#FF6B4A" d="M40 190C70 150 80 120 100 118C160 112 260 112 400 110"/>
+        <path class="ln b" pathLength="1" stroke="#22D3EE" d="M40 190C130 188 170 170 230 130C290 90 340 50 400 34"/>
+        <g class="pt"><circle cx="100" cy="118" r="6" fill="#FF6B4A"/><text x="110" y="140" fill="#FF6B4A">first demo, fast</text><circle cx="400" cy="34" r="6" fill="#22D3EE"/><text x="262" y="24" fill="#22D3EE">evidence-backed</text></g>
+      </svg>
+      <p class="note" style="color:var(--muted);font-size:.82rem">Illustrative, not measured. The shape is the point: speed to a demo is not confidence in the result.</p>
+    </div>
+    <div class="card rv vote" style="--i:5"><h3>Predict, then vote</h3>
+      <div class="q">1 · A personal experiment only you use?</div>
+      <div class="vrow" id="vote1"></div>
+      <div class="q" style="margin-top:6px">2 · A university exam platform?</div>
+      <div class="vrow" id="vote2"></div>
+      <p class="note" style="color:var(--muted);font-size:.86rem" id="voteNote">Neither choice is wrong in general. It depends on risk and on who relies on it.</p>
+    </div>
+  </div>
+</section>`;
+
+H.team=()=>`
+<section class="stage" id="st-team" aria-label="Act 4 Meet the AI engineering team">
+  <span class="eyebrow rv" style="--i:0">Act 4 · Mission: Become the Product Owner</span>
+  <h2 class="rv" style="--i:1">Meet the AI engineering team</h2>
+  <p class="lead rv" style="--i:2"><b>BMAD</b> is a structured way to use AI: each stage is a specialist with a clear job and a document to hand over. Agent names and commands depend on the BMAD version installed.</p>
+  <ul class="team rv" style="--i:3" id="team" role="tablist" aria-label="Specialists"></ul>
+  <div class="card rv" style="--i:4" id="roleCard" role="tabpanel"></div>
+  <div class="cols">
+    <div class="card rv po" style="--i:5"><span class="chip live">You decide</span><h3>You are the Product Owner</h3>
+      <p>Students paste the same flashcard twice. What should FlashFlip do?</p>
+      <div class="vrow"><button class="vbtn" data-po="merge" type="button"><span>Merge them</span></button><button class="vbtn" data-po="keep" type="button"><span>Keep both</span></button></div>
+      <div class="fb" id="poFb">The AI will not guess for you. Your decision becomes a requirement.</div></div>
+    <div class="card rv" style="--i:6"><h3>Your toolbelt, in plain English</h3><div class="tools" id="tools" style="margin-top:10px"></div></div>
+  </div>
+</section>`;
+
+H.build=()=>`
+<section class="stage" id="st-build" aria-label="Rebuild, live build and tests">
+  <span class="eyebrow rv" style="--i:0">Act 5 · Rebuild · <span class="chip live">Live</span></span>
+  <h2 class="rv" style="--i:1">Story 3: Bulletproof paste</h2>
+  <div class="cols">
+    <div class="card rv" style="--i:2"><h3>The agent, replayed</h3>
+      <div class="term agent" id="agent" style="margin-top:12px" aria-live="polite"><span class="wh">Claude Code · branch: engineered</span></div>
+      <button class="btn go" id="agPlay" type="button" style="margin-top:12px">▶ Replay the build</button></div>
+    <div class="card rv" style="--i:3"><h3>npm test</h3>
+      <ul class="tests" id="tests" style="margin-top:12px"></ul>
+      <div class="sumline" style="margin-top:12px"><span id="tSum">Not run yet</span></div>
+      <div class="sab" style="margin-top:10px"><button class="btn go" id="tRun" type="button">Run tests</button>
+      <label for="sabSel">or sabotage:</label><select id="sabSel"><option value="">pick a rule…</option>${TESTS.map(t=>`<option value="${t.rule}">${esc(t.br)}</option>`).join('')}</select><button class="btn hot" id="tSab" type="button">Break it on purpose</button></div>
+      <p class="note" style="color:var(--muted);font-size:.84rem;margin-top:8px">Sabotage removes one rule from the code and a test goes red. That is what a test is for.</p></div>
+  </div>
+</section>`;
+
+H.ship=()=>`
+<section class="stage" id="st-ship" aria-label="Deployment pipeline">
+  <span class="eyebrow rv" style="--i:0">Act 5 · Release · <span class="chip live">Live</span></span>
+  <h2 class="rv" style="--i:1">Same link. New app.</h2>
+  <div class="card rv" style="--i:2">
+    <div class="pipe" id="pipe"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><button class="btn lime" id="depBtn" type="button">🚀 Deploy to the same link</button><button class="btn" id="depReset" type="button">Reset</button></div>
+  </div>
+  <div class="cols"><div class="term log rv" style="--i:3" id="log" aria-live="polite"><span class="wh">terminal</span></div>
+  <div class="card rv" style="--i:4;display:grid;gap:10px;align-content:start"><h3>Why it ships safely</h3><p class="say">Tests passed <b class="lime">before</b> the push. The build ran <b class="lime">before</b> Vercel did. Git keeps every change, so a mistake is one command from undone.</p><p class="note" style="color:var(--muted);font-size:.86rem">Emergency switch if the live build overruns: <code>git push --force origin demo-done:main</code></p></div></div>
+</section>`;
+
+H.retry=()=>`
+<section class="stage" id="st-retry" aria-label="Verify: retry the challenges">
+  <span class="eyebrow rv" style="--i:0">Act 6 · Verify</span>
+  <h2 class="rv" style="--i:1">Same challenges. New app.</h2>
+  <p class="lead rv" style="--i:2">Refresh the link on your phone and try your breaks again. Here is the same board, run on both versions.</p>
+  <div class="card rv" style="--i:3"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><div><div class="mono" style="font-size:.7rem;color:var(--muted);letter-spacing:.1em">RESULT</div><div class="score" id="rScore">—</div></div><button class="btn lime" id="rRun" type="button">▶ Run all challenges</button></div>
+  <div class="rtry" style="margin-bottom:6px"><li style="border:0;background:none;padding:0 14px;display:grid;grid-template-columns:1fr 150px 150px;gap:12px"><span class="hd">Challenge</span><span class="hd vibe">Vibe</span><span class="hd eng">Engineered</span></li></div>
+  <ul class="rtry" id="rtry"></ul></div>
+</section>`;
+
+H.finale=()=>`
+<section class="stage" id="st-finale" aria-label="Reflect and compare">
+  <span class="eyebrow rv" style="--i:0">Act 7 · Reflect</span>
+  <h2 class="rv" style="--i:1">What changed between the two versions?</h2>
+  <div class="card rv tbl" style="--i:2"><table class="cmp" id="cmp"><thead><tr><th></th><th class="v">Vibe coded</th><th class="e">Engineered</th></tr></thead><tbody>
+    ${[['Questions before coding','None','The Analyst interviewed a human'],['Requirements','One sentence','Brief + PRD with acceptance criteria'],['Design decisions','Whatever the AI picked','Parsing is its own tested function'],['Tests','None','One per rule, run on every change'],['Time to first demo','About a minute','About an hour of planning first'],['Evidence it works','"It looked fine"','Green tests + a retry in the room'],['Best for','Experiments, prototypes','Anything people rely on']].map(r=>`<tr><td>${r[0]}</td><td class="v">${r[1]}</td><td class="e">${r[2]}</td></tr>`).join('')}
+  </tbody></table><button class="btn" id="cmpPlay" type="button" style="margin-top:12px">▶ Reveal row by row</button></div>
+  <div class="cols">
+    <div class="card rv quiz" style="--i:3"><h3>Retrieval check</h3><div id="quiz"></div></div>
+    <div class="card rv" style="--i:4;display:grid;gap:12px;align-content:start"><h3>Can you now explain…</h3>
+      <div class="outc" style="grid-template-columns:1fr 1fr">
+        <div><b>WHAT</b>AI-assisted development, vibe coding, an SDLC, an engineered AI-SDLC, what BMAD adds.</div>
+        <div><b>WHY</b>A demo is not a reliable app. Requirements, tests, review and human judgment buy trust.</div>
+        <div><b>HOW</b>Idea → requirements → acceptance criteria → small stories → AI builds → tests → deploy.</div>
+        <div><b>TOOLS</b>Claude Code · BMAD · Git/GitHub · Vitest · Vercel · the browser.</div></div>
+      <div class="badges" data-badges></div></div>
+  </div>
+  <div class="card rv" style="--i:5;display:grid;gap:10px;text-align:left">
+    <span class="chip live" style="justify-self:start">Central message</span>
+    <p class="quote">AI accelerates implementation. Engineering establishes confidence.</p>
+    <p class="note" style="color:var(--muted)">Both teams are legitimate. Vibe coding is the fastest way to explore an idea; the more people depend on the result, the more evidence you owe them.</p>
+  </div>
+</section>`;
+
+H.out=()=>`
+<section class="stage" id="st-out" aria-label="BMAD output and snapshots">
+  <span class="eyebrow rv" style="--i:0">Act 4 · What the AI team left behind</span>
+  <h2 class="rv" style="--i:1">BMAD output, in the repo</h2>
+  <p class="lead rv" style="--i:2">Every stage wrote a real file and committed it to Git. These are the actual documents from the <code>demo-done</code> branch. Click one to take a snapshot.</p>
+  <div class="stats rv" style="--i:3"><div><b>17</b><span>requirements (FR-1 to FR-17)</span></div><div><b>31</b><span>acceptance-table rows (P-01 to P-31)</span></div><div><b>12</b><span>acceptance criteria in story 1.3</span></div><div><b>19</b><span>automated test files</span></div></div>
+  <div class="outg rv" style="--i:4">
+    <div class="card"><div class="mono" style="font-size:.68rem;color:var(--muted);letter-spacing:.1em;margin-bottom:8px">REPO · BRANCH demo-done</div><ul class="tree" id="tree"></ul></div>
+    <div style="display:grid;gap:12px;align-content:start">
+      <div class="snap" id="snap"><div class="chrome"><i></i><i></i><i></i><span class="pth" id="snapPath"></span><span class="chip g" id="snapCommit"></span></div><pre id="snapBody" tabindex="0"></pre><div class="flash"></div><div class="cap" id="snapCap"></div></div>
+    </div>
+  </div>
+  <div class="card rv" style="--i:5"><h3>Follow one rule from idea to code</h3>
+    <div class="flowrow ef" id="trace" style="margin-top:14px;gap:6px 0"></div>
+    <div class="stagebox" id="traceCap" style="margin-top:12px;min-height:3.2em"><span style="color:var(--muted)">Press the button to trace the skipped-lines rule through every artifact.</span></div>
+    <button class="btn go" id="traceBtn" type="button" style="margin-top:12px">▶ Follow one rule</button></div>
+</section>`;
+
+H.git=()=>`
+<section class="stage" id="st-git" aria-label="Branches, GitHub and shipping">
+  <span class="eyebrow rv" style="--i:0">Act 5 · How code ships</span>
+  <h2 class="rv" style="--i:1">Branches, GitHub and the road to production</h2>
+  <div class="gloss rv" style="--i:2">
+    <div><b>Commit</b>One named save point you can always return to.</div>
+    <div><b>Branch</b>A parallel timeline. Experiments never touch the live one.</div>
+    <div><b>Push</b>Upload your commits from the laptop to GitHub.</div>
+    <div><b>main</b>The branch Vercel treats as "production": what students see.</div>
+    <div><b>Tag</b>A sticky label on one commit, like <code>vibe</code> or <code>before-Live</code>.</div>
+    <div><b>Force push</b>Make a branch exactly equal another. Powerful, so only on your own demo repo.</div>
+  </div>
+  <div class="card rv" style="--i:3;display:grid;gap:12px">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h3>Your real history</h3><button class="btn" id="gPlay" type="button">▶ Play history</button></div>
+    <svg class="gitg" id="gsvg" viewBox="0 0 760 290" role="img" aria-label="Git graph of the FlashFlip repository: scaffold, then the vibe branch with one commit, and the engineered branch with planning and stories, plus the demo-done backup branch."></svg>
+    <div class="cinfo" id="cinfo" aria-live="polite"><span style="color:var(--muted)">Click any commit.</span></div>
+    <div class="prod"><span>Vercel production serves:</span><b id="prodNow">Vibe version</b>
+      <span style="flex:1"></span>
+      <button class="btn" id="gEmerg" type="button">🚨 Emergency: demo-done → main</button><button class="btn" id="gReset" type="button">↺ Reset to vibe</button></div>
+  </div>
+  <div class="cols">
+    <div class="card rv" style="--i:4"><h3>The journey of one change</h3>
+      <div class="f4" id="f4" style="margin-top:14px"></div>
+      <div class="cinfo" id="fcap" style="margin-top:12px" aria-live="polite">Press <b>Run next</b> to start with the first command.</div></div>
+    <div class="card rv" style="--i:5"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><h3>The six commands</h3><span><button class="btn lime" id="gNext" type="button">Run next ▶</button> <button class="btn" id="gAll" type="button">Run all</button></span></div>
+      <div class="crows" id="crows"></div></div>
+  </div>
+</section>`;
+
+stagesEl.innerHTML=STAGES.map(s=>H[s.id]()).join('');
+
+/* =============== NAV / CLOCK =============== */
+const dots=$('dots'),seqEl=$('seq');
+dots.innerHTML=STAGES.map((s,i)=>`<button type="button" role="tab" data-go="${i}" aria-label="${esc(s.nm)}" title="${esc(s.nm)}">${i+1}</button>`).join('');
+seqEl.innerHTML=SEQ.map(s=>`<span>${s}</span>`).join('');
+const stageEls=STAGES.map(s=>$('st-'+s.id));
+const TOTAL=1200;let elapsed=0,running=false,tickId=0,startedAt=0,base=0;
+const fmt=s=>{s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function paintClock(){const left=TOTAL-elapsed;$('clock').textContent=fmt(left);$('clock').classList.toggle('warn',left<=300);$('prog').style.width=(elapsed/TOTAL*100)+'%';
+  $('clkBtn').textContent=running?'Pause':(elapsed>0?'Resume':'Start');}
+function tick(){elapsed=Math.min(TOTAL,base+(Date.now()-startedAt)/1000);if(elapsed>=TOTAL)clockPause();paintClock();}
+function clockStart(){if(elapsed>=TOTAL)elapsed=0;running=true;base=elapsed;startedAt=Date.now();tickId=setInterval(tick,500);paintClock();}
+function clockPause(){running=false;clearInterval(tickId);paintClock();}
+$('clkBtn').onclick=()=>running?clockPause():clockStart();
+
+let hooks={};
+function go(i){
+  i=Math.max(0,Math.min(maxStep,i));
+  const st=STAGES[i];S.step=i;save();
+  stageEls.forEach((el,j)=>{el.classList.toggle('on',j===i)});
+  $('vp').scrollTop=0;
+  dots.querySelectorAll('button').forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('done',j<i);b.setAttribute('aria-selected',j===i)});
+  const act=new Set(st.seq),mx=st.seq.length?Math.max(...st.seq):-1;
+  seqEl.querySelectorAll('span').forEach((el,j)=>{el.classList.toggle('on',act.has(j));el.classList.toggle('done',!act.has(j)&&j<mx)});
+  $('prev').disabled=i===0;$('next').disabled=i===maxStep;$('stepLbl').textContent=(i+1)+' / '+STAGES.length+' · '+st.nm;
+  $('notesIn').innerHTML=`<div><b>Say</b>${esc(st.say)}</div><div><b>Do</b>${esc(st.do)}</div><div class="planb"><b>If it goes wrong</b>${esc(st.plan)}</div>`;
+  if(st.at!==null&&!running&&elapsed===0){/* clock starts manually */}
+  if(hooks[st.id])hooks[st.id]();
+  paintBadges();
+}
+$('prev').onclick=()=>go(S.step-1);$('next').onclick=()=>go(S.step+1);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){const v=b.dataset.go;go(v==='1'&&b.classList.contains('btn')?1:+v)}});
+$('notesBtn').onclick=()=>{const on=$('notes').classList.toggle('on');$('notesBtn').setAttribute('aria-pressed',on)};
+addEventListener('keydown',e=>{
+  if(e.target.closest('input,select,textarea,dialog'))return;
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){go(S.step+1)}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(S.step-1)}
+  else if(e.key==='p'||e.key==='P'){$('notesBtn').click()}
+  else if(e.key===' '&&e.target===document.body){e.preventDefault();$('clkBtn').click()}
+});
+
+/* =============== HOOK =============== */
+let n60=0;
+hooks.hook=()=>{
+  const el=$('big60');clearInterval(n60);let v=0;if(RM){el.textContent='60s';}else{n60=setInterval(()=>{v+=2;el.textContent=Math.min(v,60)+'s';if(v>=60)clearInterval(n60)},30)}
+  $('lnk').value=S.link||'';drawQR(S.link);paintPoll();
+};
+function drawQR(link){
+  const q=$('qr');q.innerHTML='';
+  if(!link){q.textContent='Paste link →';return}
+  if(window.QRCode){try{new QRCode(q,{text:link,width:128,height:128,colorDark:'#05050A',colorLight:'#ffffff'});return}catch(e){}}
+  q.textContent='QR library offline. Show the link.';
+}
+$('lnk').addEventListener('input',e=>{S.link=e.target.value.trim();save();clearTimeout(drawQR.t);drawQR.t=setTimeout(()=>drawQR(S.link),250)});
+$('demoFc').onclick=e=>e.currentTarget.classList.toggle('f');
+const POLL=['Not at all','Barely','Maybe','Mostly','Completely'];
+function paintPoll(){
+  const c=S.poll.c,tot=Math.max(1,c.reduce((a,b)=>a+b,0));
+  $('poll').innerHTML=POLL.map((l,i)=>`<button class="opt" type="button" data-pv="${i}" aria-label="${l}: ${c[i]} votes"><span class="lab">${l}</span><span class="tr"><i style="width:${c[i]/tot*100}%"></i></span><span class="n">${c[i]}</span></button>`).join('');
+}
+$('poll').addEventListener('click',e=>{const b=e.target.closest('[data-pv]');if(!b)return;S.poll.c[+b.dataset.pv]++;save();paintPoll();});
+$('pollSim').onclick=()=>{S.poll.c=S.poll.c.map(()=>0);for(let i=0;i<24;i++)S.poll.c[Math.min(4,Math.max(0,Math.round(2.6+(Math.random()+Math.random()-1)*2.4)))]++;save();paintPoll()};
+$('pollReset').onclick=()=>{S.poll.c=[0,0,0,0,0];save();paintPoll()};
+
+/* =============== BREAK =============== */
+const VERD={real:['💥 REAL BREAK','It breaks on this build.'],held:['🛡️ IT HELD','Survived, but unproven.'],maybe:['🔍 CHECK ON SCREEN','Parses fine; look at the display.']};
+function paintChal(){
+  $('chal').innerHTML=CHAL.map((c,i)=>{
+    const j=S.judged[i],fl=j!==undefined,tr=c.truth;
+    return `<li><div class="flip${fl?' f':''}" data-i="${i}"><div class="in">
+      <div class="face"><span class="lv e${c.lv}">${['','Easy · 100 XP','Medium · 200 XP','Hard · 300 XP'][c.lv]}</span><span class="t">${i+1}. ${esc(c.t)}</span>
+        <span class="try">Try: ${esc(c.tr)}</span>
+        <span class="acts">${c.copy!==null&&c.copy!==''?`<button class="btn" data-cp="${i}" type="button">Copy test input</button>`:''}
+        <button class="btn hot" data-j="${i}:broke" type="button">💥 It broke</button><button class="btn" data-j="${i}:held" type="button">🛡️ It held</button></span></div>
+      <div class="face back ${tr}"><span class="verdict ${tr}">${VERD[tr][0]} · you said: ${j==='broke'?'broke':'held'}</span><span>${esc(c.why)}</span>
+        <span class="fixl">Engineers prevent it · ${esc(c.how)}</span><span>${esc(c.fix)}</span><span class="tst">test: ${esc(c.test)}</span>
+        <span class="acts"><label style="display:flex;gap:6px;align-items:center;font-size:.82rem"><input type="checkbox" data-w="${i}" ${S.why[i]?'checked':''}> I can explain why it matters (+100)</label></span></div>
+    </div></div></li>`}).join('');
+  const n=Object.keys(S.judged).length;$('bbScore').textContent=`${n} of ${CHAL.length} judged`;
+  $('surv').hidden=!CHAL.some((c,i)=>S.judged[i]!==undefined&&c.truth==='held');
+}
+$('chal').addEventListener('click',e=>{
+  const cp=e.target.closest('[data-cp]');if(cp){copy(CHAL[+cp.dataset.cp].copy,cp);return}
+  const jb=e.target.closest('[data-j]');if(!jb)return;
+  const [i,v]=jb.dataset.j.split(':');const c=CHAL[+i];if(S.judged[i]!==undefined)return;
+  S.judged[i]=v;
+  let pts=0,msg='';
+  if(c.truth==='real'&&v==='broke'){pts=c.xp;msg='Verified break: '+c.t;unlock('first')}
+  else if(c.truth==='held'&&v==='held'){pts=50;msg='Honest tester: it really held';unlock('honest')}
+  else if(c.truth==='maybe'){pts=Math.round(c.xp/2);msg='Good eye: '+c.t}
+  else{msg='Not what the instructor verified. Look closely, then flip.'}
+  save();if(pts)addXP(pts,msg);else toast(msg);
+  if(Object.keys(S.judged).length>=3)unlock('detective');
+  paintChal();
+});
+$('chal').addEventListener('change',e=>{const w=e.target.closest('[data-w]');if(!w)return;const i=w.dataset.w;if(w.checked&&!S.why[i]){S.why[i]=1;save();addXP(100,'Explained why it matters')}});
+$('chalReset').onclick=()=>{S.judged={};S.why={};save();paintChal()};
+let tm=0,tleft=90;
+function ring(){$('ringT').textContent=tleft;$('ringFg').style.strokeDashoffset=264*(1-tleft/90)}
+$('tmrBtn').onclick=()=>{if(tm){clearInterval(tm);tm=0;$('tmrBtn').textContent='Resume';return}
+  if(tleft<=0)tleft=90;$('tmrBtn').textContent='Pause';
+  tm=setInterval(()=>{tleft--;ring();if(tleft<=0){clearInterval(tm);tm=0;$('tmrBtn').textContent='Restart';toast('Time! What did you find?')}},1000)};
+hooks.break=()=>{paintChal();ring();paintBadges()};
+
+/* =============== REVEAL =============== */
+const VP='make a flashcard web app where students paste lines like "term - definition", flip through the cards, mark each one "knew it" or "missed it", and see their score';
+const VF=['Idea','Prompt','AI code','App'];
+let vRun=0;
+function flowHTML(el,arr,cls){el.innerHTML=arr.map((n,i)=>`${i?'<span class="arrow" aria-hidden="true"></span>':''}<span class="node" data-n="${i}" ${cls==='e'?`role="button" tabindex="0"`:''}>${esc(n)}</span>`).join('')}
+function lightUp(el,max){el.querySelectorAll('.node').forEach(n=>n.classList.toggle('on',+n.dataset.n<=max));el.querySelectorAll('.arrow').forEach((a,i)=>a.classList.toggle('on',i<max))}
+async function playV(){const id=++vRun;$('vPlay').disabled=true;flowHTML($('vflow'),VF,'v');$('vprompt').textContent='';
+  for(let i=0;i<VF.length;i++){if(id!==vRun)return;lightUp($('vflow'),i);if(i===1){for(let k=0;k<=VP.length;k+=RM?VP.length:4){if(id!==vRun)return;$('vprompt').textContent=VP.slice(0,k);await sleep(16)}}else await sleep(520)}
+  $('vPlay').disabled=false;$('vPlay').textContent='↻ Replay'}
+$('vPlay').onclick=playV;
+let eRun=0;
+async function playE(){const id=++eRun;$('ePlay').disabled=true;const names=['Idea'].concat(ENG_FLOW.map(f=>f[0]));flowHTML($('eflow'),names,'e');
+  for(let i=0;i<names.length;i++){if(id!==eRun)return;lightUp($('eflow'),i);await sleep(380)}$('ePlay').disabled=false;$('ePlay').textContent='↻ Replay';
+  $('eInfo').innerHTML='<span style="color:var(--muted)">Click any stage for its one-sentence meaning.</span>'}
+$('ePlay').onclick=playE;
+function eSelect(n){const i=+n.dataset.n;if(i===0)return;const f=ENG_FLOW[i-1];$('eflow').querySelectorAll('.node').forEach(x=>x.classList.remove('sel'));n.classList.add('sel');$('eInfo').innerHTML=`<b class="eng">${i}. ${esc(f[0])}</b><span>${esc(f[1])}</span>`}
+$('eflow').addEventListener('click',e=>{const n=e.target.closest('.node');if(n&&n.classList.contains('on'))eSelect(n)});
+$('eflow').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const n=e.target.closest('.node');if(n){e.preventDefault();eSelect(n)}}});
+const VOTES=[['Vibe it','Engineer it']];
+function paintVotes(){
+  [['vote1','v1'],['vote2','v2']].forEach(([id,k])=>{const c=S[k],t=Math.max(1,c[0]+c[1]);
+    $(id).innerHTML=['Vibe code it','Engineer it'].map((l,i)=>`<button class="vbtn ${i?'':'v'}" data-vk="${k}:${i}" type="button"><i class="bar" style="width:${c[i]/t*100}%"></i><span><span>${l}</span><span class="mono">${c[i]}</span></span></button>`).join('')})}
+['vote1','vote2'].forEach(id=>$(id).addEventListener('click',e=>{const b=e.target.closest('[data-vk]');if(!b)return;const [k,i]=b.dataset.vk.split(':');S[k][+i]++;save();paintVotes()}));
+hooks.reveal=()=>{
+  flowHTML($('vflow'),VF,'v');flowHTML($('eflow'),['Idea'].concat(ENG_FLOW.map(f=>f[0])),'e');lightUp($('vflow'),-1);lightUp($('eflow'),-1);
+  $('vprompt').textContent=VP;paintVotes();
+  const ch=$('chart');ch.classList.remove('go');void ch.getBoundingClientRect();ch.classList.add('go');
+};
+
+/* =============== TEAM =============== */
+let roleIdx=0;
+function paintTeam(){
+  $('team').innerHTML=ROLES.map((r,i)=>`<li><button type="button" role="tab" data-r="${i}" aria-selected="${i===roleIdx}" tabindex="${i===roleIdx?0:-1}"><span class="num">STAGE ${i+1}</span><span class="av" aria-hidden="true">${r.em}</span><span class="nm">${esc(r.nm)}</span><span class="rl">${esc(r.ag)}</span></button></li>`).join('');
+  const r=ROLES[roleIdx];
+  const cells=[['WHAT it means',r.what],['WHY it matters',r.why],['WHICH tool or agent',r.tool],['WHAT the human decides',r.human,1],['ARTIFACT produced',null],['HOW it helps the next stage',r.feeds]];
+  $('roleCard').innerHTML=`<div class="role">${cells.map((c,i)=>`<div class="cell${c[2]?' hum':''}" style="--i:${i}"><b>${c[0]}</b>${c[1]===null?`<div class="arts">${r.art.map(a=>`<button class="art" type="button" data-art="${a}">📄 ${esc(ARTS[a].n)}</button>`).join('')}</div><span style="color:var(--muted);font-size:.8rem">Click to inspect</span>`:esc(c[1])}</div>`).join('')}</div>`;
+}
+$('team').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(!b)return;roleIdx=+b.dataset.r;paintTeam();$('team').querySelector('[aria-selected="true"]').focus()});
+$('team').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;e.stopPropagation();roleIdx=(roleIdx+(e.key==='ArrowRight'?1:5))%6;paintTeam();$('team').querySelector('[aria-selected="true"]').focus();e.preventDefault()});
+const dlg=$('dlg');
+$('roleCard').addEventListener('click',e=>{const a=e.target.closest('[data-art]');if(!a)return;const x=ARTS[a.dataset.art];$('dlgT').textContent=x.n+' · '+x.f;$('dlgB').textContent=x.b;$('dlgF').textContent=x.why;dlg.showModal()});
+$('dlgX').onclick=()=>dlg.close();dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+$('tools').innerHTML=TOOLS.map(t=>`<div class="tool"><span class="tn">${t.e} ${esc(t.n)}</span><span class="pe">${esc(t.pe)}</span><code>${esc(t.c)}</code></div>`).join('');
+const POFB={merge:'Good call. "Merge duplicates" goes into the PRD as AC-4, and a test will check it forever. Scores stay honest.',keep:'Valid choice, but now write it down: if duplicates stay, scoring must count each copy. A decision without a written rule is just a vibe.'};
+document.querySelectorAll('[data-po]').forEach(b=>b.onclick=()=>{S.po=b.dataset.po;save();$('poFb').textContent=POFB[S.po];if(!S.ach.owner){addXP(150,'You made a product decision')}unlock('owner')});
+hooks.team=()=>{paintTeam();if(S.po)$('poFb').textContent=POFB[S.po]};
+
+/* =============== BUILD =============== */
+const AGENT=[
+ ['me','> /bmad-dev-story  story 3: bulletproof paste'],
+ ['who','Reading prd.md, architecture.md, stories.md …'],
+ ['ask','? Two rules conflict: duplicates "A - x" and "A - y". Merge keeping the first, or the last?'],
+ ['me','> Keep the first. Show me a plan before writing code.'],
+ ['who','Plan: (1) split on first " - " only  (2) skip + list bad lines  (3) merge dupes  (4) cap 200  (5) dir="auto"  (6) one test per rule'],
+ ['me','> Approved.'],
+ ['who','Writing app/lib/parse.ts … done'],
+ ['who','Writing app/lib/parse.test.ts … 8 tests'],
+ ['ok','✓ Self-check against acceptance criteria AC-1 … AC-7 passed']
+];
+let agRun=0;
+async function playAg(){const id=++agRun,el=$('agent');$('agPlay').disabled=true;el.innerHTML='<span class="wh">Claude Code · branch: engineered</span>';
+  for(const [c,t] of AGENT){if(id!==agRun)return;el.insertAdjacentHTML('beforeend',`<span class="ln ${c}">${esc(t)}</span>`);el.scrollTop=el.scrollHeight;await sleep(c==='ask'?1300:850)}
+  $('agPlay').disabled=false;$('agPlay').textContent='↻ Replay'}
+$('agPlay').onclick=playAg;
+let sab='',tRunId=0;
+function paintTests(state){
+  $('tests').innerHTML=TESTS.map((t,i)=>{const cls=state[i]||'';return `<li class="${cls}"><span class="ic">${cls==='grn'?'✓':cls==='red'?'✕':''}</span><span>${esc(t.n)}</span><span class="br">${esc(t.br)}</span></li>`}).join('')}
+async function runTests(){
+  const id=++tRunId;$('tRun').disabled=true;$('tSab').disabled=true;const st=TESTS.map(()=>'pend');paintTests(st);$('tSum').textContent='Running…';
+  const old=TESTS.map(t=>t.rule==='dupe'||t.rule==='skip'||t.rule==='cap'||t.rule==='sep'?'red':'grn');
+  for(let i=0;i<TESTS.length;i++){if(id!==tRunId)return;await sleep(380);st[i]=(sab&&TESTS[i].rule===sab)?'red':'grn';paintTests(st.map((s,j)=>j>i?'pend':s))}
+  const f=st.filter(s=>s==='red').length;
+  $('tSum').innerHTML=f?`<span style="color:var(--bad)">${TESTS.length-f} passed · ${f} FAILED</span> <span style="color:var(--muted);font-size:.8rem">a rule broke; release blocked</span>`:`<span style="color:var(--good)">${TESTS.length} passed · 0 failed</span>`;
+  if(!f){S.tests='green';save();unlock('green');addXP(200,'Green suite');confetti()}
+  $('tRun').disabled=false;$('tSab').disabled=false;sab='';
+}
+$('tRun').onclick=()=>{sab='';runTests()};
+$('tSab').onclick=()=>{const v=$('sabSel').value;if(!v){toast('Pick a rule to break first');return}sab=v;runTests()};
+hooks.build=()=>{paintTests(S.tests==='green'?TESTS.map(()=>'grn'):[]);if(S.tests==='green')$('tSum').innerHTML=`<span style="color:var(--good)">${TESTS.length} passed · 0 failed</span>`};
+
+/* =============== SHIP =============== */
+const PIPE=[['⌨️','Code','story 3 done'],['✅','Tests','8 green'],['🕰️','Git commit','saved history'],['⬆️','GitHub','engineered → main'],['🌍','Vercel','build + live']];
+const DLOG=['> npm test','  8 passed','> npm run build','  Compiled successfully','> git add . && git commit -m "Story 3: bulletproof paste"','> git push --force origin engineered:main','  Vercel: deployment started …','  Building (42s)','  READY · same link, engineered app'];
+let depRun=0;
+function paintPipe(n,done){
+  $('pipe').innerHTML=`<div class="wire"><i style="transform:scaleX(${n<0?0:Math.min(1,(n+(done?1:.5))/ (PIPE.length-1)) })"></i></div>`+PIPE.map((p,i)=>`<div class="st ${i<n||(done&&i<=n)?'ok':i===n?'run':''}"><span class="o">${p[0]}</span><b>${p[1]}</b><span>${p[2]}</span></div>`).join('')}
+async function deploy(){const id=++depRun,lg=$('log');$('depBtn').disabled=true;lg.innerHTML='<span class="wh">terminal</span>';paintPipe(-1,false);
+  for(let i=0;i<PIPE.length;i++){if(id!==depRun)return;paintPipe(i,false);
+    const per=[0,2,4,6,9][i],nx=[2,4,6,9,9][i];
+    for(let k=per;k<nx;k++){lg.insertAdjacentHTML('beforeend',`<span class="ln ${k===8?'ok':''}">${esc(DLOG[k])}</span>`);await sleep(420)}
+    if(i===PIPE.length-1)await sleep(500);
+    paintPipe(i,true);await sleep(280)}
+  S.shipped=true;save();unlock('ship');addXP(250,'Shipped to the same link');confetti();toast('LIVE: refresh and try your breaks again');$('depBtn').disabled=false;$('depBtn').textContent='↻ Deploy again'}
+$('depBtn').onclick=deploy;
+$('depReset').onclick=()=>{depRun++;S.shipped=false;save();$('log').innerHTML='<span class="wh">terminal</span>';paintPipe(-1,false);$('depBtn').disabled=false;$('depBtn').textContent='🚀 Deploy to the same link'};
+hooks.ship=()=>{if(S.shipped){paintPipe(PIPE.length-1,true)}else paintPipe(-1,false)};
+
+/* =============== RETRY =============== */
+const NOW={real:['okk','✓ Fixed · test added'],held:['okk','✓ Still holds · now tested'],maybe:['okk','✓ dir="auto" · tested']};
+const OLD={real:['bad','✕ Breaks'],held:['okk','✓ Held (unproven)'],maybe:['meh','? Needs a look']};
+function paintRetry(n){
+  $('rtry').innerHTML=CHAL.map((c,i)=>{const o=OLD[c.truth],nw=NOW[c.truth];return `<li><span><b>${i+1}. ${esc(c.t)}</b></span><span class="res ${o[0]}">${o[1]}</span><span class="res ${i<n?nw[0]:''}">${i<n?nw[1]:'…'}</span></li>`}).join('');
+  $('rScore').textContent=n===0?'—':`${n} / ${CHAL.length} safe`;}
+let rRun=0;
+async function runRetry(){const id=++rRun;$('rRun').disabled=true;paintRetry(0);
+  for(let i=1;i<=CHAL.length;i++){if(id!==rRun)return;await sleep(480);paintRetry(i)}
+  S.retried=true;save();addXP(300,'Verified on the new app');unlock('trust');confetti();$('rRun').disabled=false;$('rRun').textContent='↻ Run again'}
+$('rRun').onclick=runRetry;
+hooks.retry=()=>paintRetry(S.retried?CHAL.length:0);
+
+/* =============== FINALE =============== */
+const QUIZ=[
+ {q:'What does an automated test give you that a working demo does not?',a:['A faster first prototype','Repeatable evidence the rule still holds after every change','A nicer-looking interface'],c:1,fb:'A demo shows one lucky path. A test checks the rule every time.'},
+ {q:'Which stage turns "cards must survive a refresh" into something you can check?',a:['Requirements: an acceptance criterion','Deployment','Choosing a colour palette'],c:0,fb:'Written criteria are the bridge from a wish to a test.'},
+ {q:'A university exam platform vs. a personal experiment. What is the best fit?',a:['Vibe code both, it is faster','Engineer both exactly the same way','Vibe the experiment; add engineering as more people depend on it'],c:2,fb:'Match the process to the risk. Both approaches are legitimate.'}
+];
+function paintQuiz(){
+  $('quiz').innerHTML=QUIZ.map((q,qi)=>`<div class="quiz"><div class="qq">${qi+1}. ${esc(q.q)}</div><div class="ans">${q.a.map((a,ai)=>{const d=S.quiz[qi];let cl='';if(d!==undefined){if(ai===q.c)cl='right';else if(ai===d)cl='wrong'}return `<button type="button" class="${cl}" data-q="${qi}:${ai}" ${d!==undefined?'disabled':''}>${esc(a)}</button>`}).join('')}</div><div class="fb">${S.quiz[qi]!==undefined?esc(q.fb):''}</div></div>`).join('<hr style="border:0;border-top:1px solid var(--rule);width:100%">')}
+$('quiz').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(!b)return;const [q,a]=b.dataset.q.split(':').map(Number);if(S.quiz[q]!==undefined)return;S.quiz[q]=a;save();if(a===QUIZ[q].c)addXP(100,'Correct');paintQuiz()});
+let cmpRun=0;
+async function playCmp(){const id=++cmpRun,rows=[...document.querySelectorAll('#cmp tbody tr')];rows.forEach(r=>r.classList.remove('on'));
+  for(const r of rows){if(id!==cmpRun)return;await sleep(420);r.classList.add('on')}}
+$('cmpPlay').onclick=playCmp;
+hooks.finale=()=>{paintQuiz();paintBadges();playCmp()};
+
+/* =============== BMAD OUTPUT =============== */
+const TREE=[
+ ['d',0,'_bmad-output/'],['d',1,'planning-artifacts/'],['d',2,'briefs/brief-flashflip-2026-11-10/'],
+ ['f',3,'brief.md','brief','Analyst'],['x',3,'addendum.md · .decision-log.md'],
+ ['d',2,'prds/prd-flashflip-2026-11-10/'],['f',3,'prd.md','prd','PM'],
+ ['f',2,'architecture.md','arch','Architect'],['f',2,'epics.md','epics','PM'],
+ ['d',1,'implementation-artifacts/'],['f',2,'1-3-bulletproof-paste.md','story','Dev story'],
+ ['x',2,'1-1-….md · 1-2-….md · deferred-work.md'],['f',2,'sprint-status.yaml','sprint','Tracker'],
+ ['d',0,'lib/core/'],['f',1,'parse-lines.test.ts','test','QA'],['x',1,'parse-lines.ts · score.ts · session.ts …']
+];
+const SNAPS={
+ brief:{p:'_bmad-output/planning-artifacts/briefs/brief-flashflip-2026-11-10/brief.md',c:'1882f7a · Planning',cap:'The Analyst interviewed the human, then wrote this. Note the honest line "No moat": a good brief does not oversell.',b:`---
+title: "Product Brief: FlashFlip"
+status: final
+created: 2026-11-10
+---
+
+# Product Brief: FlashFlip
+
+## Executive Summary
+FlashFlip is a one-page web app that turns a first-year student's own notes into flashcards in seconds. They paste lines like "term - definition" …
+
+## The Problem
+Working belief, not yet checked with students: first-year students revise from their own notes, but notes are not a way to test yourself …
+
+## What Makes This Different
+No moat, and the brief should not pretend otherwise. The difference is friction: no account, no setup, forgiving of messy paste …
+
+## Success Criteria
+1. A first-time student completes a full pass on a phone (paste, flip, mark, score) with no instructions.
+2. Paste to first card in under 30 seconds, with no sign-up (a target, not yet tested).
+3. A realistic ~20-line messy paste (mixed dashes, colons, tabs, bullets, blank lines) yields the right cards …`},
+ prd:{p:'_bmad-output/planning-artifacts/prds/prd-flashflip-2026-11-10/prd.md',c:'1882f7a · Planning',cap:'Terms are defined once and used exactly. That precision is what lets a test check them later.',b:`---
+title: "PRD: FlashFlip"
+status: final
+---
+
+# PRD: FlashFlip
+
+## 2.3 Key User Journeys
+- **UJ-1. Sam quizzes the morning's lecture on the bus.** Sam, a first-year biology Student …
+- **UJ-2. Lina pastes a classmate's messy document.** Lina's Notes come from a shared word-processor file: numbered entries, mixed …
+
+## 3. Glossary
+These terms are used exactly as written throughout this PRD.
+- **Line** — a stretch of Paste text ended by a line break. A blank Line contains only whitespace.
+- **Separator** — the characters in a Line that divide the Term from the Definition (FR-4).
+- **Card** — one Term and one Definition made from one Line.
+- **Deck** — the Cards made from one Paste text, in the order of their Lines. There is one Deck at a time.`},
+ arch:{p:'_bmad-output/planning-artifacts/architecture.md',c:'1882f7a · Planning',cap:'Privacy, speed and accessibility are decided before code exists, not discovered after.',b:`---
+workflowType: 'architecture'
+status: 'complete'
+completedAt: '2026-11-10'
+project_name: 'flashflip'
+---
+
+# Architecture Decision Document
+
+## Requirements Overview
+**Functional Requirements:** 17 FRs in six features, from the final PRD.
+
+**Non-Functional Requirements:**
+- **NFR-2 Privacy** is the strongest structural constraint: no network requests after load, no cookies, no third-party scripts …
+- **NFR-1 Performance:** parse 1,000 Lines within 500 ms and answer any tap within 200 ms on a mid-range phone.
+- **NFR-3 Accessibility and touch:** keyboard operation, visible focus, WCAG 2.2 AA contrast, 44 × 44 px targets …
+- **NFR-4 Devices:** from 320 px wide, on current and previous major Safari iOS, Chrome Android and desktop browsers.`},
+ epics:{p:'_bmad-output/planning-artifacts/epics.md',c:'1882f7a · Planning',cap:'Each requirement is a numbered sentence. These IDs reappear in story files and in test titles.',b:`# FlashFlip - Epic Breakdown
+
+## Requirements Inventory
+### Functional Requirements
+
+FR-1: The Student can paste or type Paste text in the Paste box and tap "Make cards" …
+
+FR-5: A non-blank Line that has no Separator, or whose Term or Definition is empty, is a Skipped line. The app never drops a non-blank Line …
+
+FR-6: If "Make cards" cannot make a Deck, the Student stays on the Paste screen with the Paste text intact …`},
+ story:{p:'_bmad-output/implementation-artifacts/1-3-bulletproof-paste.md',c:'demo-done',cap:'A story file: baseline commit, acceptance criteria, tasks. The developer agent builds from this, one story at a time.',b:`---
+baseline_commit: 00de100c7f57a07e8586633cd820636a2d6c0a0c
+---
+
+# Story 1.3: Bulletproof paste
+Status: done
+
+## Story
+As a first-year student, I want my messy notes from Notion, Google Docs or chat apps to turn into the right cards, with anything unreadable listed rather than … so that I can trust the deck matches my notes.
+
+## Acceptance Criteria
+1. Acceptance table (FR-2 to FR-5, AD-11). Given the typed table in lib/core/acceptance-table.ts, when the parser test runs …
+3. List markers (FR-3). Given a trimmed Line that starts with a bullet or a number marker …
+5. Skipped lines (FR-5, AD-3). Given a non-blank Line with no Separator or an empty Term or Definition …
+7. Long Skipped lists (AD-9). Given more than 100 Skipped lines …
+11. Crash boundary (PAT-6). Given an unexpected render error, then app/error.tsx shows a "Start over" button …
+12. Closing checks. docs/manual-checklist.md exists and is filled in …`},
+ sprint:{yaml:1,p:'_bmad-output/implementation-artifacts/sprint-status.yaml',c:'demo-done',cap:'The tracker the agents update. Every story moves through the same statuses, so progress is never a guess.',b:`# generated: 2026-11-10
+# project: flashflip
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review
+#   - done: Story completed`},
+ test:{p:'lib/core/parse-lines.test.ts',c:'demo-done',cap:'Test titles quote requirement IDs, so a red test names the exact rule it protects.',b:`describe("P-01 to P-31 the PRD acceptance table (AD-11)", () => {
+  it("P-01 to P-31 every row is present exactly once, in order", …
+
+describe("FR-4 parser rules", () => {
+  it("FR-4 a tab outranks a dash and a dash outranks a colon", …
+  it("FR-4 runs of whitespace inside a Term or Definition collapse to one space", …
+
+describe("FR-2 Lines", () => {
+  it("FR-2 a Line of only zero-width characters is blank, not a Skipped line", …`}
+};
+function fmtSnap(t,yaml){return t.split('\n').map(l=>{const e=esc(l);
+  if(yaml&&/^\s*#/.test(l))return `<span class="m">${e}</span>`;
+  if(/^#{1,3} /.test(l))return `<span class="h">${e}</span>`;
+  if(/^---$/.test(l))return `<span class="m">${e}</span>`;
+  if(/^(\d+\. |FR-|\s*it\(|describe\(|- \*\*)/.test(l))return `<span class="k">${e}</span>`;
+  return e}).join('\n')}
+let snapKey='';
+function selectSnap(k){
+  const s=SNAPS[k];if(!s)return;snapKey=k;
+  document.querySelectorAll('[data-snap]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.snap===k));
+  $('snapPath').textContent=s.p;$('snapCommit').textContent=s.c;$('snapBody').innerHTML=fmtSnap(s.b,s.yaml);
+  $('snapCap').innerHTML='<span class="chip live">Snapshot</span> '+esc(s.cap);
+  const sn=$('snap');sn.classList.remove('shot');void sn.offsetWidth;sn.classList.add('shot');
+}
+$('tree').innerHTML=TREE.map(r=>r[0]==='d'?`<li class="d" style="--l:${r[1]}">${esc(r[2])}</li>`:r[0]==='x'?`<li class="x" style="--l:${r[1]}">${esc(r[2])}</li>`:`<li><button class="f" type="button" style="--l:${r[1]}" data-snap="${r[3]}" aria-pressed="false">${esc(r[2])}<span class="tg">${esc(r[4])}</span></button></li>`).join('');
+$('tree').addEventListener('click',e=>{const b=e.target.closest('[data-snap]');if(b)selectSnap(b.dataset.snap)});
+const TRACE=[['Brief','Messy pasted notes are a real problem for students.'],['PRD','FR-5: a Line with no Separator is a Skipped line. The app never drops a non-blank Line.'],['Architecture','Decision AD-3 is cited by the skipped-lines criterion.'],['Story 1.3','Acceptance criterion 5 restates FR-5 as a checkable sentence.'],['Test','parse-lines.test.ts checks the P-01 to P-31 acceptance table.'],['Code','lib/core/parse-lines.ts makes the rule true.']];
+let trRun=0;
+async function playTrace(){const id=++trRun;$('traceBtn').disabled=true;flowHTML($('trace'),TRACE.map(t=>t[0]),'t');lightUp($('trace'),-1);
+  for(let i=0;i<TRACE.length;i++){if(id!==trRun)return;lightUp($('trace'),i);$('traceCap').innerHTML=`<b class="eng">${i+1}. ${esc(TRACE[i][0])}</b><span>${esc(TRACE[i][1])}</span>`;await sleep(1300)}
+  $('traceBtn').disabled=false;$('traceBtn').textContent='↻ Replay'}
+$('traceBtn').onclick=playTrace;
+hooks.out=()=>{flowHTML($('trace'),TRACE.map(t=>t[0]),'t');lightUp($('trace'),-1);selectSnap(snapKey||'brief')};
+
+/* =============== GIT + GITHUB =============== */
+const GC={
+ scaffold:{x:70,y:50,h:'47b9c25',m:'Scaffold: create-next-app starting point (reconstructed)',n:'The empty starting project. Both teams begin here.',col:'#A3A7CC',lab:['tag: scaffold']},
+ vibe:{x:300,y:50,h:'8ba3c6b',m:'Vibe-coded FlashFlip (one prompt, not reviewed)',n:'One prompt, about a minute. origin/main starts here, so the live link serves this version.',col:'#FF6B4A',lab:['tag: vibe','branch: main']},
+ showvibe:{x:480,y:50,h:'764018a',m:'Trigger preview deployment',n:'Branch show-vibe sits on top of the vibe version. Pushing it makes Vercel build a preview.',col:'#FF6B4A',lab:['branch: show-vibe']},
+ plan:{x:200,y:150,h:'1882f7a',m:'Planning: brief, PRD, architecture, stories',n:'The BMAD documents are committed first. The plan exists before the code does.',col:'#22D3EE',lab:[]},
+ eng:{x:340,y:150,h:'00de100',m:'Stories 1-2: paste, flip, score, refresh',n:'Tag before-Live marks the starting line for the live build. origin/engineered points here.',col:'#22D3EE',lx:-14,lab:['tag: before-Live','branch: engineered']},
+ s3a:{x:470,y:240,h:'2ac83e5',m:'Story 3: bulletproof paste (backup)',n:'Story 3, rehearsed in advance and saved as a backup.',col:'#C8FF3D',lab:[]},
+ demo:{x:610,y:240,h:'c7c6d04',m:'Story 3: bulletproof paste (backup)',n:'Branch demo-done is the emergency switch. Push it to main if the live build overruns.',col:'#C8FF3D',lab:['branch: demo-done']},
+ live:{x:540,y:150,h:'new',m:'Story 3: bulletproof paste',n:'The commit you make live in class. It lands on the engineered branch.',col:'#C8FF3D',lab:['made live today']}
+};
+const EDG=[['scaffold','vibe','#FF6B4A'],['vibe','showvibe','#FF6B4A'],['scaffold','plan','#22D3EE'],['plan','eng','#22D3EE'],['eng','s3a','#C8FF3D'],['s3a','demo','#C8FF3D']];
+const PROD={vibe:'Vibe version · 8ba3c6b',eng:'Engineered, stories 1-2 · 00de100',live:'Engineered, story 3 made live today',demo:'Engineered, story 3 backup · c7c6d04'};
+const pathD=(a,b)=>a.y===b.y?`M${a.x} ${a.y}H${b.x}`:`M${a.x} ${a.y}C${a.x+70} ${a.y} ${b.x-70} ${b.y} ${b.x} ${b.y}`;
+let gMain='vibe',liveOn=false,gBuilt=false,gs=0,busy=false;
+function buildGraph(){
+  const L=GC.live;
+  const lanes=[50,150,240].map(y=>`<path class="lane" d="M20 ${y}H740"/>`).join('');
+  const edges=EDG.map((e,i)=>`<path class="edge" pathLength="1" stroke="${e[2]}" d="${pathD(GC[e[0]],GC[e[1]])}" style="--d:${(i*.35).toFixed(2)}s"/>`).join('');
+  const lab=(c,k)=>c.lab.map((l,j)=>`<text class="${l.startsWith('tag')?'tg':'br'}" x="${c.x+(c.lx||0)}" y="${c.y+28+j*13}" text-anchor="${c.lx?'end':'middle'}">${esc(l)}</text>`).join('');
+  const cms=Object.entries(GC).filter(([k])=>k!=='live').map(([k,c],i)=>`<g class="cm" data-c="${k}" tabindex="0" role="button" aria-label="${esc(c.h+' '+c.m)}" style="--d:${(i*.3+.2).toFixed(2)}s"><circle cx="${c.x}" cy="${c.y}" r="11" stroke="${c.col}"/><text x="${c.x}" y="${c.y-18}" text-anchor="middle">${c.h}</text>${lab(c,k)}</g>`).join('');
+  const live=`<g class="lc" id="liveCm" data-c="live" role="button" tabindex="-1" aria-label="The live Story 3 commit"><path class="edge" stroke="#C8FF3D" d="${pathD(GC.eng,L)}"/><circle cx="${L.x}" cy="${L.y}" r="11" fill="#16200a" stroke="#C8FF3D" stroke-width="3.5" stroke-dasharray="4 3"/><text x="${L.x}" y="${L.y-18}" text-anchor="middle">new</text>${lab(L)}</g>`;
+  const ptr=`<g id="mainPtr"><rect x="-44" y="-12" width="88" height="22" rx="6"/><text y="3" font-size="10">origin/main</text><path d="M-5 10L0 17L5 10Z" fill="#C8FF3D"/></g>`;
+  $('gsvg').setAttribute('viewBox','0 -34 760 330');
+  $('gsvg').innerHTML=lanes+edges+cms+live+ptr;
+  setMain(gMain);$('liveCm').classList.toggle('show',liveOn);
+}
+function setMain(k){gMain=k;const c=GC[k];$('mainPtr').style.transform=`translate(${c.x}px,${c.y-52}px)`;$('prodNow').textContent=PROD[k];}
+function addLive(on){liveOn=on;const l=$('liveCm');l.classList.toggle('show',on);l.tabIndex=on?0:-1}
+function selectCommit(k){const c=GC[k];document.querySelectorAll('#gsvg [data-c]').forEach(g=>g.classList.toggle('sel',g.dataset.c===k));
+  $('cinfo').innerHTML=`<span class="mono">${c.h}</span> · <b>${esc(c.m)}</b><br><span style="color:var(--muted)">${esc(c.n)}</span>`}
+$('gsvg').addEventListener('click',e=>{const g=e.target.closest('[data-c]');if(g)selectCommit(g.dataset.c)});
+$('gsvg').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const g=e.target.closest('[data-c]');if(g){e.preventDefault();e.stopPropagation();selectCommit(g.dataset.c)}}});
+function playGraph(){const s=$('gsvg');s.classList.remove('go');void s.getBoundingClientRect();s.classList.add('go')}
+$('gPlay').onclick=playGraph;
+
+const FNODES=[['💻','Your laptop','local repo'],['🐙','GitHub','remote "origin"'],['▲','Vercel','builds main'],['📱','Phones','the live link']];
+const GH=['main','engineered','demo-done','show-vibe'];
+function paintGhb(u){$('ghb').innerHTML=GH.map(b=>`<span class="${u===b?'upd':''}">${b}</span>`).join('')}
+function buildF4(){$('f4').innerHTML=FNODES.map((n,i)=>`<div class="nd" data-fn="${i}"><span class="o" aria-hidden="true">${n[0]}</span><b>${n[1]}</b><span>${n[2]}</span>${i===1?'<div class="ghb" id="ghb"></div>':''}</div>${i<3?`<div class="wr" data-wr="${i}"><i class="pk"></i></div>`:''}`).join('');paintGhb()}
+const fnode=i=>document.querySelector(`[data-fn="${i}"]`);
+function nstate(i,c){const n=fnode(i);n.classList.remove('run','ok');if(c)n.classList.add(c)}
+const cap=t=>{$('fcap').innerHTML=t};
+async function packet(i){const pk=document.querySelector(`[data-wr="${i}"] .pk`);
+  if(RM){await sleep(60);return}
+  pk.style.opacity=1;const a=pk.animate([{left:'0%'},{left:'calc(100% - 14px)'}],{duration:650,easing:'cubic-bezier(0.77,0,0.175,1)',fill:'forwards'});
+  try{await a.finished}catch(e){}pk.style.opacity=0;a.cancel()}
+async function ship(key,label){
+  nstate(0,'ok');nstate(1,'run');nstate(2,'');nstate(3,'');
+  await packet(0);nstate(1,'ok');paintGhb('main');setMain(key);
+  cap('GitHub now has the new <b>main</b> and notifies Vercel that main changed (a webhook).');await sleep(600);
+  await packet(1);nstate(2,'run');cap('Vercel is building the app …');await sleep(1100);nstate(2,'ok');
+  await packet(2);nstate(3,'ok');cap('<b class="lime">Live.</b> '+label+' Students refresh the same link.');confetti();
+}
+const GCMD=[
+ {c:'git checkout engineered',pe:'Switch to the engineered timeline.'},
+ {c:'npm test',pe:'Run the automatic checks. No green, no release.'},
+ {c:'npm run build',pe:'Build exactly what Vercel will build, so errors show up here first.'},
+ {c:'git add . && git commit -m "Story 3: bulletproof paste"',pe:'Save the work as a commit, a named save point.'},
+ {c:'git push origin engineered',pe:'Upload the commit to GitHub. Production is not touched yet.'},
+ {c:'git push --force origin engineered:main',pe:'Make main equal to engineered. Vercel sees main change and ships it.'}
+];
+const GX=[['!','Emergency switch','git push --force origin demo-done:main','Deploy the rehearsed version if the live build overruns.'],['↺','Reset after rehearsal','git checkout engineered\ngit reset --hard before-Live\ngit push --force origin vibe:main','Engineered back to stories 1-2, live link back to the vibe version.']];
+function paintCrows(){
+  const row=(ix,c,pe,cls)=>`<div class="crow ${cls}"><span class="ix">${ix}</span><div><div class="cd"><code>${esc(c).replace(/\n/g,'<br>')}</code><button class="cp" type="button" data-cmd="${esc(c)}">Copy</button></div><div class="pe">${esc(pe)}</div></div></div>`;
+  $('crows').innerHTML=GCMD.map((x,i)=>row(i<gs?'✓':i+1,x.c,x.pe,i<gs?'done':i===gs?'cur':'')).join('')+GX.map(x=>row(x[0],x[2],x[1]+': '+x[3],'')).join('');
+}
+async function runNext(){
+  if(busy)return;if(gs>=GCMD.length){toast('Done. Press Reset to run it again.');return}
+  busy=true;const i=gs;
+  if(i<=2){nstate(0,'run');cap(['Switching timelines: you are now on <b>engineered</b>.','Running the tests on the laptop. Green means safe to continue.','Building the app the way Vercel will.'][i]);await sleep(900);nstate(0,'ok')}
+  else if(i===3){nstate(0,'run');cap('A commit is a save point. A new <b>Story 3</b> commit appears on the engineered branch.');await sleep(500);addLive(true);selectCommit('live');await sleep(700);nstate(0,'ok')}
+  else if(i===4){nstate(0,'ok');nstate(1,'run');await packet(0);nstate(1,'ok');paintGhb('engineered');cap('GitHub received <b>engineered</b>. Production (main) is unchanged, so students still see the old version.')}
+  else if(i===5){await ship('live','The engineered Story 3 is now on main.')}
+  gs++;paintCrows();busy=false;
+}
+$('gNext').onclick=runNext;
+$('gAll').onclick=async()=>{if(busy)return;while(gs<GCMD.length){await runNext();await sleep(400)}};
+$('gEmerg').onclick=async()=>{if(busy)return;busy=true;await ship('demo','The rehearsed demo-done backup is now on main.');busy=false};
+$('gReset').onclick=()=>{busy=false;gs=0;addLive(false);setMain('vibe');buildF4();cap('Reset. Press <b>Run next</b> to start with the first command.');paintCrows();document.querySelectorAll('#gsvg .sel').forEach(g=>g.classList.remove('sel'));$('cinfo').innerHTML='<span style="color:var(--muted)">Click any commit.</span>'};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-cmd]');if(b)copy(b.dataset.cmd,b)});
+hooks.git=()=>{if(!gBuilt){gBuilt=true;buildGraph();buildF4();paintCrows()}playGraph()};
+
+/* =============== BOOT =============== */
+renderXP();paintClock();paintPoll();
+go(Math.min(S.step||0,maxStep));
+if(window.QRCode===undefined){addEventListener('load',()=>{if(STAGES[S.step].id==='hook')drawQR(S.link)})}
+})();
+</script>
+</body>
+</html>
